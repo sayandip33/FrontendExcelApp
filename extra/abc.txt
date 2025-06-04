@@ -1,54 +1,74 @@
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.validation.annotation.Validated;
 
-import java.time.LocalDateTime;
+import java.util.*;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ExceptionAccountTransferDTO {
+@Slf4j
+@RestController
+@RequestMapping("/account")
+@Validated
+public class AccountController {
 
-    @NotBlank(message = "Account number cannot be blank")
-    @Pattern(regexp = "\\d{14}", message = "Account number must be exactly 14 digits")
-    private String accountNumber;
+    private final AccountService accountService;
 
-    @Pattern(regexp = "Y|N", message = "Active flag must be either 'Y' or 'N'")
-    private String active = "Y";
-
-    @NotBlank(message = "App name cannot be blank")
-    @Size(max = 5, message = "App name can be max 5 characters")
-    private String appName = "RA";
-
-    @NotBlank(message = "Transfer number cannot be blank")
-    @Pattern(regexp = "\\d{10,12}", message = "Transfer number must be between 10 to 12 digits")
-    private String transferNumber = "1234561234";
-
-    @NotBlank(message = "CreatedBy is required")
-    private String createdBy;
-
-    @PastOrPresent(message = "Created time cannot be in the future")
-    private LocalDateTime createdTime = LocalDateTime.now();
-
-    @NotBlank(message = "UpdatedBy is required")
-    private String updatedBy = "NA";
-
-    private LocalDateTime updatedTime;
-
-    private String msg;
-}
-
-
-
-@PostMapping("/submit")
-public ResponseEntity<String> submit(@Valid @RequestBody ExceptionAccountTransferDTO dto, BindingResult result) {
-    if (result.hasErrors()) {
-        return ResponseEntity.badRequest().body(result.getAllErrors().get(0).getDefaultMessage());
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
     }
-    // proceed with logic
-    return ResponseEntity.ok("Success");
+
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, List<String>>> handleFileUpload(
+            @RequestParam("file") MultipartFile file, HttpSession session) {
+
+        log.info("Inside handleFileUpload controller");
+
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", List.of("User not logged in")));
+        }
+
+        return ResponseEntity.ok(accountService.processExcel(file, userId));
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<ExceptionAccountTransferDTO> searchAccount(
+            @RequestParam @Pattern(regexp = "\\d{14}", message = "Account number must be exactly 14 digits") String accountNumber) {
+
+        log.info("Inside searchAccount controller");
+
+        ExceptionAccountTransferDTO accountDetails = accountService.findAccount(accountNumber);
+        if (accountDetails != null) {
+            return ResponseEntity.ok(accountDetails);
+        } else {
+            ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
+            dto.setMsg("Did not find any account with this number: " + accountNumber);
+            return ResponseEntity.ok(dto);
+        }
+    }
+
+    @PostMapping("/update-transfer")
+    public ResponseEntity<Map<String, String>> updateTransferNumber(
+            @RequestParam @Pattern(regexp = "\\d{14}", message = "Invalid account number") String accountNumber,
+            @RequestParam @Pattern(regexp = "\\d{10,12}", message = "Transfer number must be 10 to 12 digits") String transferNumber,
+            @RequestParam @Pattern(regexp = "Y|N", message = "Active flag must be 'Y' or 'N'") String active,
+            HttpSession session) {
+
+        log.info("Inside updateTransferNumber controller");
+
+        String userId = (String) session.getAttribute("userId");
+        Map<String, String> map = new HashMap<>();
+
+        if (userId == null || userId.isBlank()) {
+            map.put("error", "User not logged in");
+            return ResponseEntity.badRequest().body(map);
+        }
+
+        boolean success = accountService.updateTransferNumber(accountNumber, transferNumber, active, userId);
+        map.put(success ? "success" : "failure", success ? "true" : "true");
+        return ResponseEntity.ok(map);
+    }
 }
-
-
-
