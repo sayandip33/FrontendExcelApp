@@ -1,84 +1,35 @@
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import javax.servlet.http.HttpSession;
-import java.util.*;
+public boolean updateTransferNumber(String accNum, String newTransferNum, String active, String userId) {
+    Log.info("Inside updateTransferNumber service");
 
-@RestController
-@RequestMapping("/api")
-public class AccountController {
+    Connection connection = null;
+    PreparedStatement preparedStatement = null;
 
-    private final AccountService accountService;
+    try {
+        connection = dataSourceConfiguration.getDataSource().getConnection();
+        String updateQuery = "UPDATE OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT " +
+                "SET TRANSFER_NUMBER = ?, IS_ACTIVE = ?, UPDATED_BY = ?, UPDATED_DATE = GETDATE() " +
+                "WHERE ACCOUNT_NUMBER = ?";
 
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
+        preparedStatement = connection.prepareStatement(updateQuery);
+        preparedStatement.setString(1, newTransferNum);
+        preparedStatement.setString(2, active);
+        preparedStatement.setString(3, userId);
+        preparedStatement.setString(4, accNum);
 
-    // --- UPLOAD EXCEL FILE ---
-    @PostMapping("/upload")
-    @ResponseBody
-    public Map<String, List<String>> handleFileUpload(@RequestParam("file") MultipartFile file, HttpSession session) {
-        String userId = (String) session.getAttribute("userId");
-        if (file.isEmpty()) {
-            return Map.of("error", List.of("Uploaded file is empty."));
+        int rowsUpdated = preparedStatement.executeUpdate();
+        Log.info("Rows updated: " + rowsUpdated);
+        return rowsUpdated > 0;
+
+    } catch (Exception e) {
+        Log.error("Error updating transfer number: ", e);
+        return false;
+
+    } finally {
+        try {
+            if (preparedStatement != null) preparedStatement.close();
+            if (connection != null) connection.close();
+        } catch (Exception e) {
+            Log.error("Error closing resources: ", e);
         }
-        return accountService.processExcel(file, userId);
-    }
-
-    // --- SEARCH ACCOUNT ---
-    @PostMapping("/search")
-    @ResponseBody
-    public ExceptionAccountTransferDTO searchAccount(@RequestParam String accountNumber) {
-        ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
-
-        if (accountNumber == null || !accountNumber.matches("\\d{14}")) {
-            dto.setMsg("Invalid account number. It must be exactly 14 digits.");
-            return dto;
-        }
-
-        ExceptionAccountTransferDTO accountDetails = accountService.findAccount(accountNumber);
-        if (accountDetails != null) {
-            return accountDetails;
-        }
-
-        dto.setMsg("Did not find any account with this number: " + accountNumber);
-        return dto;
-    }
-
-    // --- UPDATE TRANSFER NUMBER ---
-    @PostMapping("/update-transfer")
-    @ResponseBody
-    public Map<String, String> updateTransferNumber(
-            @RequestParam String accountNumber,
-            @RequestParam String transferNumber,
-            @RequestParam String active,
-            HttpSession session) {
-
-        Map<String, String> result = new HashMap<>();
-
-        if (accountNumber == null || !accountNumber.matches("\\d{14}")) {
-            result.put("error", "Invalid account number. Must be exactly 14 digits.");
-            return result;
-        }
-
-        if (transferNumber == null || !transferNumber.matches("\\d{10,12}")) {
-            result.put("error", "Invalid transfer number. It must be 10-12 digits.");
-            return result;
-        }
-
-        if (active == null || !(active.equalsIgnoreCase("Y") || active.equalsIgnoreCase("N"))) {
-            result.put("error", "Active flag must be either 'Y' or 'N'.");
-            return result;
-        }
-
-        String userId = (String) session.getAttribute("userId");
-        boolean success = accountService.updateTransferNumber(accountNumber, transferNumber, active.toUpperCase(), userId);
-
-        if (success) {
-            result.put("success", "true");
-        } else {
-            result.put("failure", "Update failed. Account might not exist.");
-        }
-
-        return result;
     }
 }
