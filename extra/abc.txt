@@ -1,217 +1,134 @@
-package com.example.service;
+Here’s a well-structured **JIRA Story** for the requirement you described, including the **user story**, **acceptance criteria**, and **technical breakdown**. This can be copy-pasted into JIRA directly for your `PHOadminPortal` application.
 
-import com.example.config.SMSDataSourceFactory;
-import com.example.dto.ExceptionAccountTransferDTO;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+---
 
-import javax.sql.DataSource;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.sql.*;
-import java.time.LocalDateTime;
-import java.util.*;
+### 🧾 JIRA Story
 
-@Service
-@Slf4j
-public class AccountService {
+---
 
-    @Autowired
-    private SMSDataSourceFactory dataSourceConfiguration;
+**Project:** `PHOadminPortal`
+**Story Title:** Build UI Tab for Managing Exception Accounts & Transfer Numbers
+**Type:** Story
+**Priority:** High
+**Status:** To Do
+**Assignee:** *(Assign to appropriate developer/UI engineer)*
 
-    private static final String INSERT_SQL = """
-        INSERT INTO OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT (
-            ACCOUNT_NUMBER, IS_ACTIVE, APP_NAME, TRANSFER_NUMBER, CREATED_BY, CREATED_DATE
-        ) VALUES (?, ?, ?, ?, ?, ?)
-    """;
+---
 
-    private static final String UPDATE_SQL = """
-        UPDATE OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT
-        SET TRANSFER_NUMBER = ?, IS_ACTIVE = ?, UPDATED_BY = ?, UPDATED_DATE = ?
-        WHERE ACCOUNT_NUMBER = ?
-    """;
+### **Story Description**
 
-    public Map<String, List<String>> processExcel(MultipartFile file, String userId) {
-        List<String> failedList = new ArrayList<>();
-        int successCount = 0;
-        Map<String, List<String>> returnMap = new HashMap<>();
+As an administrator,
+I want to manage exception accounts by uploading a list of 14-digit account numbers through an Excel file,
+So that I can control their transfer numbers and activation status through a user-friendly interface.
 
-        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
-            Sheet sheet = workbook.getSheetAt(0);
-            Set<String> dbAccounts = getAllAccountNumbers();
+---
 
-            List<ExceptionAccountTransferDTO> validDTOs = new ArrayList<>();
+### **Acceptance Criteria**
 
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue;
+| #  | Acceptance Criteria                                                                     | Pass Condition                                 |
+| -- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1  | A new tab titled **"Exception Account Manager"** must be added to the PHOadminPortal UI | Tab is visible and selectable                  |
+| 2  | The tab must allow uploading an Excel file (`.xlsx`) with 14-digit account numbers      | File upload works, validation errors shown     |
+| 3  | Only valid 14-digit numeric accounts should be accepted                                 | UI shows line-level errors for invalid records |
+| 4  | Duplicate account numbers already existing in the DB should be rejected                 | Error message shown, and not saved             |
+| 5  | Successfully uploaded records must be inserted into the database                        | Verify through DB or API                       |
+| 6  | Admin must be able to search for a specific account by account number                   | Input + search button triggers API call        |
+| 7  | The search result must show current transfer number and active status                   | Result displays accurate data                  |
+| 8  | Admin must be able to edit `Transfer Number` and `Is Active` fields                     | Edits reflected in DB                          |
+| 9  | All changes should be audit-logged with updated\_by and updated\_time                   | DB audit columns updated                       |
+| 10 | User-friendly error messages must be shown on upload/search/update failures             | UX messages in banner or below form            |
 
-                Cell cell = row.getCell(0);
-                if (cell == null || cell.getCellType() == CellType.BLANK) {
-                    failedList.add("Row " + (row.getRowNum() + 1) + ": Empty cell");
-                    continue;
-                }
+---
 
-                String accNum = getCellValueAsString(cell).trim();
-                if (!accNum.matches("^\\d{14}$")) {
-                    failedList.add("Row " + (row.getRowNum() + 1) + ": Invalid Account Number - " + accNum);
-                    continue;
-                }
+### **Functional Tasks**
 
-                if (dbAccounts.contains(accNum)) {
-                    failedList.add("Row " + (row.getRowNum() + 1) + ": Account already exists - " + accNum);
-                    continue;
-                }
+#### Backend (API)
 
-                ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
-                dto.setAccountNumber(accNum);
-                dto.setCreatedBy(userId);
-                dto.setActive("Y");
-                dto.setAppName("RA");
-                dto.setTransferNumber("1234567890");
-                dto.setCreatedTime(LocalDateTime.now());
+* [x] POST `/upload` – Handle file upload, parse Excel, validate and save to DB
+* [x] POST `/search` – Accept account number and return record details
+* [x] POST `/update-transfer` – Update transfer number and active status
+* [x] GET `/download-log?fileName={name}` – Download error log file for failed rows
 
-                validDTOs.add(dto);
-            }
+#### Frontend (UI - React/Angular/Vue)
 
-            // Insert valid records
-            if (!validDTOs.isEmpty()) {
-                insertBatch(validDTOs);
-                successCount = validDTOs.size();
-            }
+* [x] Add new tab: **Exception Account Manager**
+* [x] File upload section with validation (accept `.xlsx`, 14-digit check)
+* [x] Display upload success/failure results with log file download link
+* [x] Search bar to enter and search account number
+* [x] Display search result in editable form
+* [x] Enable inline update of `Transfer Number` and `Is Active`
+* [x] Show loader, success, and error messages
+* [x] Prevent update if validations fail
 
-            returnMap.put("success", List.of(successCount + " records uploaded successfully."));
+---
 
-            // Handle failure logs
-            if (!failedList.isEmpty()) {
-                String filename = "failed_accounts_" + System.currentTimeMillis() + ".txt";
-                Path logPath = Paths.get("logs", filename);
-                Files.createDirectories(logPath.getParent());
-                Files.write(logPath, failedList, StandardCharsets.UTF_8);
-                returnMap.put("failure", List.of(failedList.size() + " records failed."));
-                returnMap.put("logFile", List.of(filename));
-            }
+### **Validation Rules**
 
-        } catch (Exception e) {
-            log.error("Error processing Excel", e);
-            returnMap.put("error", List.of("Error processing file: " + e.getMessage()));
-        }
+* Account Number: Exactly 14 digits
+* Transfer Number: 10–12 digits (customizable)
+* Is Active: Accepts only `Y` or `N`
+* App Name: Defaulted to `"RA"` unless explicitly overridden
 
-        return returnMap;
-    }
+---
 
-    private void insertBatch(List<ExceptionAccountTransferDTO> dtos) throws SQLException {
-        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
+### **Non-Functional Requirements**
 
-            for (ExceptionAccountTransferDTO dto : dtos) {
-                ps.setString(1, dto.getAccountNumber());
-                ps.setString(2, dto.getActive());
-                ps.setString(3, dto.getAppName());
-                ps.setString(4, dto.getTransferNumber());
-                ps.setString(5, dto.getCreatedBy());
-                ps.setTimestamp(6, Timestamp.valueOf(dto.getCreatedTime()));
-                ps.addBatch();
-            }
+* Upload must support up to 30,000 rows
+* Must return response within 10 seconds
+* Audit updates with timestamps and userId
 
-            ps.executeBatch();
-        }
-    }
+---
 
-    public ExceptionAccountTransferDTO findAccount(String accNum) {
-        ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
-        String query = "SELECT * FROM OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT WHERE ACCOUNT_NUMBER = ?";
+### **Dependencies**
 
-        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+* Excel template specification (column headers, formats)
+* DB table: `OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT`
+* Logging and audit implementation
+* Spring Boot backend services
+* Frontend integration (React preferred)
 
-            ps.setString(1, accNum);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    dto.setAccountNumber(rs.getString("ACCOUNT_NUMBER"));
-                    dto.setActive(rs.getString("IS_ACTIVE"));
-                    dto.setAppName(rs.getString("APP_NAME"));
-                    dto.setTransferNumber(rs.getString("TRANSFER_NUMBER"));
-                    dto.setCreatedBy(rs.getString("CREATED_BY"));
-                    dto.setCreatedTime(rs.getTimestamp("CREATED_DATE").toLocalDateTime());
-                    dto.setUpdatedBy(rs.getString("UPDATED_BY"));
-                    Timestamp ts = rs.getTimestamp("UPDATED_DATE");
-                    if (ts != null) dto.setUpdatedTime(ts.toLocalDateTime());
-                    return dto;
-                }
-            }
+---
 
-            dto.setMsg("No account found with number: " + accNum);
-        } catch (Exception e) {
-            log.error("Error fetching account", e);
-            dto.setMsg("Error fetching account: " + e.getMessage());
-        }
+Certainly! Here's a **professional and clear JIRA story description** tailored as a **business requirement** for your `PHOadminPortal` application:
 
-        return dto;
-    }
+---
 
-    public boolean updateTransferNumber(String accNum, String newTransferNum, String active, String userId) {
-        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_SQL)) {
+### 📝 JIRA Story Description
 
-            ps.setString(1, newTransferNum);
-            ps.setString(2, active);
-            ps.setString(3, userId);
-            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(5, accNum);
+---
 
-            return ps.executeUpdate() > 0;
+**Title:** Implement Exception Account Management UI Tab for Transfer Number Handling
 
-        } catch (Exception e) {
-            log.error("Error updating transfer number", e);
-            return false;
-        }
-    }
+**Description:**
 
-    public Resource getLogFile(String fileName) {
-        try {
-            Path path = Paths.get("logs").resolve(fileName);
-            if (Files.exists(path)) {
-                return new FileSystemResource(path.toFile());
-            }
-        } catch (Exception e) {
-            log.error("Error loading log file", e);
-        }
-        return null;
-    }
+The business has identified the need to manage a specific set of customer accounts known as **exception accounts**, which require manual handling of transfer numbers. These accounts will be maintained through a new UI tab in the **PHOadminPortal**.
 
-    private Set<String> getAllAccountNumbers() {
-        Set<String> accountSet = new HashSet<>();
-        String sql = "SELECT ACCOUNT_NUMBER FROM OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT";
+The objective is to enable administrators to:
 
-        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+* Upload bulk exception account numbers (14-digit format) using an Excel file.
+* Validate and store only clean, compliant records in the database.
+* Search for specific accounts and view their current transfer number and status.
+* Edit the `Transfer Number` and `Is Active` fields for these accounts through the UI.
+* Download error logs for any failed uploads or invalid rows.
 
-            while (rs.next()) {
-                accountSet.add(rs.getString("ACCOUNT_NUMBER"));
-            }
+This functionality is being developed to address operational needs where automatic mapping does not apply and manual oversight of these accounts is necessary.
 
-        } catch (Exception e) {
-            log.error("Error fetching existing accounts", e);
-        }
+---
 
-        return accountSet;
-    }
+### 💼 Business Rationale:
 
-    private String getCellValueAsString(Cell cell) {
-        return switch (cell.getCellType()) {
-            case STRING -> cell.getStringCellValue();
-            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
-            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> cell.getCellFormula();
-            default -> "";
-        };
-    }
-}
+Currently, exception accounts and their transfer numbers are managed manually via scripts or DB changes, which increases the risk of error, lacks traceability, and slows down operations.
+
+By building this UI:
+
+* **Efficiency** improves through self-service management of exception accounts.
+* **Accuracy** increases with validations in place to restrict bad data.
+* **Auditability** is enhanced by recording all changes with user IDs and timestamps.
+* **Scalability** is enabled by supporting uploads of large files (e.g., up to 30,000 accounts).
+
+This tab will serve as a centralized and secure portal for handling exception routing logic across various internal teams.
+
+---
+
+Let me know if you'd like this version adapted for a specific stakeholder (e.g., tech lead, QA, product owner), or included in a BRD/Confluence format.
+
