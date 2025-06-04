@@ -83,3 +83,73 @@ fetch('/api/account/upload', {
         downloadFailureDetailsIfPresent(data);
     })
     .catch(err => console.error('Upload failed', err));
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    function validateAndUpload1() {
+    const fileInput = document.getElementById("excelFile");
+    const file = fileInput.files[0];
+
+    if (!file || !file.name.endsWith(".xlsx")) {
+        showFailureAlert("Please upload a valid .xlsx file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("upload", {
+        method: "POST",
+        body: formData
+    })
+        .then(res => res.json())
+        .then(msg => {
+            console.log('msg:', msg);
+
+            // Download inline failure list if present
+            downloadFailureDetailsIfPresent(msg);
+
+            const successMsg = msg.success?.[0] || "";
+            const failureMsg = msg.failure?.[0] || "";
+            const logFile = msg.logFile?.[0] || "";
+
+            // Display success message
+            if (successMsg) {
+                document.getElementById("response").innerText = successMsg;
+                if (typeof showSuccessAlert === "function") {
+                    showSuccessAlert(successMsg);
+                }
+            }
+
+            // Display failure message
+            if (failureMsg) {
+                document.getElementById("errorResponse").innerText = failureMsg;
+                if (typeof showFailureAlert === "function") {
+                    showFailureAlert(failureMsg);
+                }
+            }
+
+            // Auto-download server-generated log file (optional)
+            if (logFile) {
+                const a = document.createElement("a");
+                a.href = `download-log?fileName=${encodeURIComponent(logFile)}`;
+                a.download = logFile;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        })
+        .catch(err => {
+            console.error("Upload failed:", err);
+            showFailureAlert("Something went wrong during upload. Please try again.");
+        });
+}
+    
