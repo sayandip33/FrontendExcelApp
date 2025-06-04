@@ -1,1 +1,88 @@
-empty
+CREATE TABLE [IVRBXP2].[dbo].[OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT] (
+    ACCOUNT_NUMBER VARCHAR(20) PRIMARY KEY,
+    IS_ACTIVE VARCHAR(1) DEFAULT 'N',
+    APP_NAME VARCHAR(5),
+    TRANSFER_NUMBER VARCHAR(12),
+    CREATED_BY VARCHAR(10),
+    CREATED_DATE DATETIME DEFAULT GETDATE(),
+    UPDATED_BY VARCHAR(10),
+    UPDATED_DATE DATETIME
+);
+
+
+INSERT INTO [IVRBXP2].[dbo].[OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT] (
+    ACCOUNT_NUMBER, IS_ACTIVE, APP_NAME, TRANSFER_NUMBER, CREATED_BY, CREATED_DATE
+) VALUES (?, ?, ?, ?, ?, GETDATE());
+
+
+SELECT 
+    ACCOUNT_NUMBER, IS_ACTIVE, APP_NAME, TRANSFER_NUMBER, 
+    CREATED_BY, CREATED_DATE, UPDATED_BY, UPDATED_DATE 
+FROM 
+    [IVRBXP2].[dbo].[OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT];
+
+    
+    
+    UPDATE [IVRBXP2].[dbo].[OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT]
+SET 
+    TRANSFER_NUMBER = ?, 
+    IS_ACTIVE = ?, 
+    UPDATED_BY = ?, 
+    UPDATED_DATE = GETDATE()
+WHERE 
+    ACCOUNT_NUMBER = ?;
+    
+    
+    
+    
+    import java.sql.*;
+
+public class AccountDAO {
+    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=IVRBXP2";
+    private static final String USER = "your_username";
+    private static final String PASS = "your_password";
+
+    public void insertAccount(String acc, String active, String app, String transfer, String createdBy) throws Exception {
+        String sql = "INSERT INTO OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT " +
+                     "(ACCOUNT_NUMBER, IS_ACTIVE, APP_NAME, TRANSFER_NUMBER, CREATED_BY, CREATED_DATE) " +
+                     "VALUES (?, ?, ?, ?, ?, GETDATE())";
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, acc);
+            ps.setString(2, active);
+            ps.setString(3, app);
+            ps.setString(4, transfer);
+            ps.setString(5, createdBy);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateTransferAndActive(String acc, String transfer, String active, String updatedBy) throws Exception {
+        String sql = "UPDATE OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT " +
+                     "SET TRANSFER_NUMBER = ?, IS_ACTIVE = ?, UPDATED_BY = ?, UPDATED_DATE = GETDATE() " +
+                     "WHERE ACCOUNT_NUMBER = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, transfer);
+            ps.setString(2, active);
+            ps.setString(3, updatedBy);
+            ps.setString(4, acc);
+            ps.executeUpdate();
+        }
+    }
+
+    public void getAllAccounts() throws Exception {
+        String sql = "SELECT * FROM OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT";
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                System.out.println("Account: " + rs.getString("ACCOUNT_NUMBER") +
+                                   ", Active: " + rs.getString("IS_ACTIVE") +
+                                   ", App: " + rs.getString("APP_NAME") +
+                                   ", Transfer: " + rs.getString("TRANSFER_NUMBER"));
+            }
+        }
+    }
+}
+    
