@@ -1,74 +1,43 @@
-import jakarta.validation.constraints.*;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.*;
+import jakarta.validation.ConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
 
-@Slf4j
-@RestController
-@RequestMapping("/account")
-@Validated
-public class AccountController {
+@ControllerAdvice
+public class GlobalExceptionHandler {
 
-    private final AccountService accountService;
-
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
+    // For validation errors on @RequestParam, @PathVariable, etc.
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, String>> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getConstraintViolations().forEach(cv ->
+            errors.put("error", cv.getMessage())
+        );
+        return ResponseEntity.badRequest().body(errors);
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<Map<String, List<String>>> handleFileUpload(
-            @RequestParam("file") MultipartFile file, HttpSession session) {
-
-        log.info("Inside handleFileUpload controller");
-
-        String userId = (String) session.getAttribute("userId");
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", List.of("User not logged in")));
-        }
-
-        return ResponseEntity.ok(accountService.processExcel(file, userId));
+    // For validation errors on @Valid request bodies
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        return ResponseEntity.badRequest().body(errors);
     }
 
-    @PostMapping("/search")
-    public ResponseEntity<ExceptionAccountTransferDTO> searchAccount(
-            @RequestParam @Pattern(regexp = "\\d{14}", message = "Account number must be exactly 14 digits") String accountNumber) {
-
-        log.info("Inside searchAccount controller");
-
-        ExceptionAccountTransferDTO accountDetails = accountService.findAccount(accountNumber);
-        if (accountDetails != null) {
-            return ResponseEntity.ok(accountDetails);
-        } else {
-            ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
-            dto.setMsg("Did not find any account with this number: " + accountNumber);
-            return ResponseEntity.ok(dto);
-        }
-    }
-
-    @PostMapping("/update-transfer")
-    public ResponseEntity<Map<String, String>> updateTransferNumber(
-            @RequestParam @Pattern(regexp = "\\d{14}", message = "Invalid account number") String accountNumber,
-            @RequestParam @Pattern(regexp = "\\d{10,12}", message = "Transfer number must be 10 to 12 digits") String transferNumber,
-            @RequestParam @Pattern(regexp = "Y|N", message = "Active flag must be 'Y' or 'N'") String active,
-            HttpSession session) {
-
-        log.info("Inside updateTransferNumber controller");
-
-        String userId = (String) session.getAttribute("userId");
-        Map<String, String> map = new HashMap<>();
-
-        if (userId == null || userId.isBlank()) {
-            map.put("error", "User not logged in");
-            return ResponseEntity.badRequest().body(map);
-        }
-
-        boolean success = accountService.updateTransferNumber(accountNumber, transferNumber, active, userId);
-        map.put(success ? "success" : "failure", success ? "true" : "true");
-        return ResponseEntity.ok(map);
+    // Generic Exception
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Unexpected error occurred: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
