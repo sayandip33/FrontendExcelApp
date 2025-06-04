@@ -1,0 +1,39 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.custom-btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  border: 2px solid black;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-btn:hover {
+  background-color: rgb(97, 95, 95);
+  color: white;
+}
+
+/* Extra styles for variations */
+.custom-btn.outlined {
+  border: 2px dashed black;
+}
+
+.custom-btn.rounded {
+  border-radius: 50px;
+}
