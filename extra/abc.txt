@@ -1,8 +1,16 @@
-if (/^[\w.\-]+$/.test(logFile)) {
+if (logFile && /^[\w.\-]+$/.test(logFile)) {
   const a = document.createElement("a");
-  a.href = `downloadLog?fileName=${encodeURIComponent(logFile)}`;
+
+  // Use only a validated and encoded file name
+  const safeFileName = encodeURIComponent(logFile);
+  a.href = `downloadLog?fileName=${safeFileName}`;
   a.download = logFile;
+
+  // Optional: make it invisible and remove safely
+  a.style.display = "none";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+} else {
+  console.warn("Invalid log file name provided. Skipping download.");
 }
