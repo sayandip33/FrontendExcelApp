@@ -1,35 +1,217 @@
-public boolean updateTransferNumber(String accNum, String newTransferNum, String active, String userId) {
-    Log.info("Inside updateTransferNumber service");
+package com.example.service;
 
-    Connection connection = null;
-    PreparedStatement preparedStatement = null;
+import com.example.config.SMSDataSourceFactory;
+import com.example.dto.ExceptionAccountTransferDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-    try {
-        connection = dataSourceConfiguration.getDataSource().getConnection();
-        String updateQuery = "UPDATE OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT " +
-                "SET TRANSFER_NUMBER = ?, IS_ACTIVE = ?, UPDATED_BY = ?, UPDATED_DATE = GETDATE() " +
-                "WHERE ACCOUNT_NUMBER = ?";
+import javax.sql.DataSource;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.*;
 
-        preparedStatement = connection.prepareStatement(updateQuery);
-        preparedStatement.setString(1, newTransferNum);
-        preparedStatement.setString(2, active);
-        preparedStatement.setString(3, userId);
-        preparedStatement.setString(4, accNum);
+@Service
+@Slf4j
+public class AccountService {
 
-        int rowsUpdated = preparedStatement.executeUpdate();
-        Log.info("Rows updated: " + rowsUpdated);
-        return rowsUpdated > 0;
+    @Autowired
+    private SMSDataSourceFactory dataSourceConfiguration;
 
-    } catch (Exception e) {
-        Log.error("Error updating transfer number: ", e);
-        return false;
+    private static final String INSERT_SQL = """
+        INSERT INTO OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT (
+            ACCOUNT_NUMBER, IS_ACTIVE, APP_NAME, TRANSFER_NUMBER, CREATED_BY, CREATED_DATE
+        ) VALUES (?, ?, ?, ?, ?, ?)
+    """;
 
-    } finally {
-        try {
-            if (preparedStatement != null) preparedStatement.close();
-            if (connection != null) connection.close();
+    private static final String UPDATE_SQL = """
+        UPDATE OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT
+        SET TRANSFER_NUMBER = ?, IS_ACTIVE = ?, UPDATED_BY = ?, UPDATED_DATE = ?
+        WHERE ACCOUNT_NUMBER = ?
+    """;
+
+    public Map<String, List<String>> processExcel(MultipartFile file, String userId) {
+        List<String> failedList = new ArrayList<>();
+        int successCount = 0;
+        Map<String, List<String>> returnMap = new HashMap<>();
+
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Set<String> dbAccounts = getAllAccountNumbers();
+
+            List<ExceptionAccountTransferDTO> validDTOs = new ArrayList<>();
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue;
+
+                Cell cell = row.getCell(0);
+                if (cell == null || cell.getCellType() == CellType.BLANK) {
+                    failedList.add("Row " + (row.getRowNum() + 1) + ": Empty cell");
+                    continue;
+                }
+
+                String accNum = getCellValueAsString(cell).trim();
+                if (!accNum.matches("^\\d{14}$")) {
+                    failedList.add("Row " + (row.getRowNum() + 1) + ": Invalid Account Number - " + accNum);
+                    continue;
+                }
+
+                if (dbAccounts.contains(accNum)) {
+                    failedList.add("Row " + (row.getRowNum() + 1) + ": Account already exists - " + accNum);
+                    continue;
+                }
+
+                ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
+                dto.setAccountNumber(accNum);
+                dto.setCreatedBy(userId);
+                dto.setActive("Y");
+                dto.setAppName("RA");
+                dto.setTransferNumber("1234567890");
+                dto.setCreatedTime(LocalDateTime.now());
+
+                validDTOs.add(dto);
+            }
+
+            // Insert valid records
+            if (!validDTOs.isEmpty()) {
+                insertBatch(validDTOs);
+                successCount = validDTOs.size();
+            }
+
+            returnMap.put("success", List.of(successCount + " records uploaded successfully."));
+
+            // Handle failure logs
+            if (!failedList.isEmpty()) {
+                String filename = "failed_accounts_" + System.currentTimeMillis() + ".txt";
+                Path logPath = Paths.get("logs", filename);
+                Files.createDirectories(logPath.getParent());
+                Files.write(logPath, failedList, StandardCharsets.UTF_8);
+                returnMap.put("failure", List.of(failedList.size() + " records failed."));
+                returnMap.put("logFile", List.of(filename));
+            }
+
         } catch (Exception e) {
-            Log.error("Error closing resources: ", e);
+            log.error("Error processing Excel", e);
+            returnMap.put("error", List.of("Error processing file: " + e.getMessage()));
         }
+
+        return returnMap;
+    }
+
+    private void insertBatch(List<ExceptionAccountTransferDTO> dtos) throws SQLException {
+        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
+
+            for (ExceptionAccountTransferDTO dto : dtos) {
+                ps.setString(1, dto.getAccountNumber());
+                ps.setString(2, dto.getActive());
+                ps.setString(3, dto.getAppName());
+                ps.setString(4, dto.getTransferNumber());
+                ps.setString(5, dto.getCreatedBy());
+                ps.setTimestamp(6, Timestamp.valueOf(dto.getCreatedTime()));
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+        }
+    }
+
+    public ExceptionAccountTransferDTO findAccount(String accNum) {
+        ExceptionAccountTransferDTO dto = new ExceptionAccountTransferDTO();
+        String query = "SELECT * FROM OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT WHERE ACCOUNT_NUMBER = ?";
+
+        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, accNum);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    dto.setAccountNumber(rs.getString("ACCOUNT_NUMBER"));
+                    dto.setActive(rs.getString("IS_ACTIVE"));
+                    dto.setAppName(rs.getString("APP_NAME"));
+                    dto.setTransferNumber(rs.getString("TRANSFER_NUMBER"));
+                    dto.setCreatedBy(rs.getString("CREATED_BY"));
+                    dto.setCreatedTime(rs.getTimestamp("CREATED_DATE").toLocalDateTime());
+                    dto.setUpdatedBy(rs.getString("UPDATED_BY"));
+                    Timestamp ts = rs.getTimestamp("UPDATED_DATE");
+                    if (ts != null) dto.setUpdatedTime(ts.toLocalDateTime());
+                    return dto;
+                }
+            }
+
+            dto.setMsg("No account found with number: " + accNum);
+        } catch (Exception e) {
+            log.error("Error fetching account", e);
+            dto.setMsg("Error fetching account: " + e.getMessage());
+        }
+
+        return dto;
+    }
+
+    public boolean updateTransferNumber(String accNum, String newTransferNum, String active, String userId) {
+        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(UPDATE_SQL)) {
+
+            ps.setString(1, newTransferNum);
+            ps.setString(2, active);
+            ps.setString(3, userId);
+            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(5, accNum);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            log.error("Error updating transfer number", e);
+            return false;
+        }
+    }
+
+    public Resource getLogFile(String fileName) {
+        try {
+            Path path = Paths.get("logs").resolve(fileName);
+            if (Files.exists(path)) {
+                return new FileSystemResource(path.toFile());
+            }
+        } catch (Exception e) {
+            log.error("Error loading log file", e);
+        }
+        return null;
+    }
+
+    private Set<String> getAllAccountNumbers() {
+        Set<String> accountSet = new HashSet<>();
+        String sql = "SELECT ACCOUNT_NUMBER FROM OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT";
+
+        try (Connection conn = dataSourceConfiguration.getDataSource().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                accountSet.add(rs.getString("ACCOUNT_NUMBER"));
+            }
+
+        } catch (Exception e) {
+            log.error("Error fetching existing accounts", e);
+        }
+
+        return accountSet;
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> "";
+        };
     }
 }
