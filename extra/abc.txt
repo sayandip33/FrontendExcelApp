@@ -1,134 +1,85 @@
-Here’s a well-structured **JIRA Story** for the requirement you described, including the **user story**, **acceptance criteria**, and **technical breakdown**. This can be copy-pasted into JIRA directly for your `PHOadminPortal` application.
+🔁 Replace this block:
 
----
+if (!failedList.isEmpty()) {
+    String filename = "failed_accounts_" + System.currentTimeMillis() + ".txt";
+    Path logPath = Paths.get("logs", filename);
+    Files.createDirectories(logPath.getParent());
+    Files.write(logPath, failedList, StandardCharsets.UTF_8);
+    returnMap.put("failure", List.of(failedList.size() + " records failed."));
+    returnMap.put("logFile", List.of(filename));
+}
+✅ With this:
 
-### 🧾 JIRA Story
+if (!failedList.isEmpty()) {
+    returnMap.put("failure", List.of(failedList.size() + " records failed."));
+    returnMap.put("failureDetails", failedList);
+}
 
----
 
-**Project:** `PHOadminPortal`
-**Story Title:** Build UI Tab for Managing Exception Accounts & Transfer Numbers
-**Type:** Story
-**Priority:** High
-**Status:** To Do
-**Assignee:** *(Assign to appropriate developer/UI engineer)*
 
----
 
-### **Story Description**
+Optional: Remove File Handling Method
+You can delete this method if you're no longer using file-based logs:
 
-As an administrator,
-I want to manage exception accounts by uploading a list of 14-digit account numbers through an Excel file,
-So that I can control their transfer numbers and activation status through a user-friendly interface.
 
----
+public Resource getLogFile(String fileName) { ... }
 
-### **Acceptance Criteria**
 
-| #  | Acceptance Criteria                                                                     | Pass Condition                                 |
-| -- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| 1  | A new tab titled **"Exception Account Manager"** must be added to the PHOadminPortal UI | Tab is visible and selectable                  |
-| 2  | The tab must allow uploading an Excel file (`.xlsx`) with 14-digit account numbers      | File upload works, validation errors shown     |
-| 3  | Only valid 14-digit numeric accounts should be accepted                                 | UI shows line-level errors for invalid records |
-| 4  | Duplicate account numbers already existing in the DB should be rejected                 | Error message shown, and not saved             |
-| 5  | Successfully uploaded records must be inserted into the database                        | Verify through DB or API                       |
-| 6  | Admin must be able to search for a specific account by account number                   | Input + search button triggers API call        |
-| 7  | The search result must show current transfer number and active status                   | Result displays accurate data                  |
-| 8  | Admin must be able to edit `Transfer Number` and `Is Active` fields                     | Edits reflected in DB                          |
-| 9  | All changes should be audit-logged with updated\_by and updated\_time                   | DB audit columns updated                       |
-| 10 | User-friendly error messages must be shown on upload/search/update failures             | UX messages in banner or below form            |
+ Updated Controller (Remove /download-log endpoint if not needed)
+If you want to completely rely on in-memory log delivery, you can delete this endpoint:
 
----
 
-### **Functional Tasks**
+@GetMapping("/download-log")
+public ResponseEntity<Resource> downloadLog(@RequestParam("fileName") String fileName) { ... }
 
-#### Backend (API)
 
-* [x] POST `/upload` – Handle file upload, parse Excel, validate and save to DB
-* [x] POST `/search` – Accept account number and return record details
-* [x] POST `/update-transfer` – Update transfer number and active status
-* [x] GET `/download-log?fileName={name}` – Download error log file for failed rows
 
-#### Frontend (UI - React/Angular/Vue)
+✅ What Changes in Frontend?
+The frontend can now directly access response.failureDetails, for example:
 
-* [x] Add new tab: **Exception Account Manager**
-* [x] File upload section with validation (accept `.xlsx`, 14-digit check)
-* [x] Display upload success/failure results with log file download link
-* [x] Search bar to enter and search account number
-* [x] Display search result in editable form
-* [x] Enable inline update of `Transfer Number` and `Is Active`
-* [x] Show loader, success, and error messages
-* [x] Prevent update if validations fail
 
----
+{
+  "success": ["10 records uploaded successfully."],
+  "failure": ["5 records failed."],
+  "failureDetails": [
+    "Row 2: Invalid Account Number - 123",
+    "Row 4: Empty cell",
+    ...
+  ]
+}
 
-### **Validation Rules**
 
-* Account Number: Exactly 14 digits
-* Transfer Number: 10–12 digits (customizable)
-* Is Active: Accepts only `Y` or `N`
-* App Name: Defaulted to `"RA"` unless explicitly overridden
 
----
+function downloadFailureDetailsIfPresent(responseData) {
+    const failureDetails = responseData.failureDetails;
 
-### **Non-Functional Requirements**
+    if (failureDetails && Array.isArray(failureDetails) && failureDetails.length > 0) {
+        const content = failureDetails.join('\n');
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
 
-* Upload must support up to 30,000 rows
-* Must return response within 10 seconds
-* Audit updates with timestamps and userId
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'upload_failures.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
 
----
+        // Cleanup the object URL
+        URL.revokeObjectURL(url);
+    }
+}
 
-### **Dependencies**
 
-* Excel template specification (column headers, formats)
-* DB table: `OVERRIDE_TRANSFER_NUMBER_FOR_EXCEPTION_ACCOUNT`
-* Logging and audit implementation
-* Spring Boot backend services
-* Frontend integration (React preferred)
 
----
 
-Certainly! Here's a **professional and clear JIRA story description** tailored as a **business requirement** for your `PHOadminPortal` application:
-
----
-
-### 📝 JIRA Story Description
-
----
-
-**Title:** Implement Exception Account Management UI Tab for Transfer Number Handling
-
-**Description:**
-
-The business has identified the need to manage a specific set of customer accounts known as **exception accounts**, which require manual handling of transfer numbers. These accounts will be maintained through a new UI tab in the **PHOadminPortal**.
-
-The objective is to enable administrators to:
-
-* Upload bulk exception account numbers (14-digit format) using an Excel file.
-* Validate and store only clean, compliant records in the database.
-* Search for specific accounts and view their current transfer number and status.
-* Edit the `Transfer Number` and `Is Active` fields for these accounts through the UI.
-* Download error logs for any failed uploads or invalid rows.
-
-This functionality is being developed to address operational needs where automatic mapping does not apply and manual oversight of these accounts is necessary.
-
----
-
-### 💼 Business Rationale:
-
-Currently, exception accounts and their transfer numbers are managed manually via scripts or DB changes, which increases the risk of error, lacks traceability, and slows down operations.
-
-By building this UI:
-
-* **Efficiency** improves through self-service management of exception accounts.
-* **Accuracy** increases with validations in place to restrict bad data.
-* **Auditability** is enhanced by recording all changes with user IDs and timestamps.
-* **Scalability** is enabled by supporting uploads of large files (e.g., up to 30,000 accounts).
-
-This tab will serve as a centralized and secure portal for handling exception routing logic across various internal teams.
-
----
-
-Let me know if you'd like this version adapted for a specific stakeholder (e.g., tech lead, QA, product owner), or included in a BRD/Confluence format.
-
+fetch('/api/account/upload', {
+    method: 'POST',
+    body: formData,
+})
+    .then(res => res.json())
+    .then(data => {
+        console.log('Upload Result:', data);
+        downloadFailureDetailsIfPresent(data);
+    })
+    .catch(err => console.error('Upload failed', err));
