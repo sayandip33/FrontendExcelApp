@@ -1,26 +1,80 @@
-function downloadFailureDetailsIfPresent(responseData) {
-    const failureDetails = responseData.failureDetails;
+function searchAccount1() {
+    const acc = document.getElementById("searchAccount").value.trim();
 
-    if (Array.isArray(failureDetails) && failureDetails.length > 0) {
-        const content = failureDetails.join('\n');
-        const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-
-        // Create the download link but DO NOT attach it to the DOM
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "upload_failures.txt";
-
-        // Use MouseEvent to simulate the click without DOM insertion
-        const clickEvent = new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-        });
-
-        a.dispatchEvent(clickEvent);
-
-        // Cleanup
-        URL.revokeObjectURL(url);
+    if (!/^\d{14}$/.test(acc)) {
+        showFailureAlert("Enter a valid 14-digit account number (numbers only).");
+        return;
     }
+
+    const formData = new URLSearchParams();
+    formData.append("accountNumber", acc);
+
+    fetch("search", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById("resultBody");
+        tbody.innerHTML = "";
+
+        if (data && data.accountNumber) {
+            const row = document.createElement("tr");
+
+            const createCell = (text, isHTML = false) => {
+                const td = document.createElement("td");
+                if (isHTML) {
+                    td.innerHTML = text; // Only safe if sanitized or static content
+                } else {
+                    td.textContent = text;
+                }
+                return td;
+            };
+
+            row.appendChild(createCell(data.accountNumber));
+            
+            const activeCell = document.createElement("td");
+            activeCell.id = "activeCell";
+            const activeSpan = document.createElement("span");
+            activeSpan.id = "activeValue";
+            activeSpan.textContent = data.active;
+            activeCell.appendChild(activeSpan);
+            row.appendChild(activeCell);
+
+            row.appendChild(createCell(data.appName));
+            row.appendChild(createCell(data.createdBy));
+            row.appendChild(createCell(data.createdTime));
+
+            const transferCell = document.createElement("td");
+            transferCell.id = "transferCell";
+            const transferSpan = document.createElement("span");
+            transferSpan.id = "transferValue";
+            transferSpan.textContent = data.transferNumber;
+            transferCell.appendChild(transferSpan);
+            row.appendChild(transferCell);
+
+            row.appendChild(createCell(data.updatedBy));
+            row.appendChild(createCell(data.updatedTime));
+
+            const actionCell = document.createElement("td");
+            actionCell.id = "actionCell";
+            const button = document.createElement("button");
+            button.className = "sid";
+            button.textContent = "Edit";
+            button.onclick = () => enableEdit(data.transferNumber, data.accountNumber, data.active);
+            actionCell.appendChild(button);
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        } else {
+            showFailureAlert(data.msg || "Account not found.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showFailureAlert("An error occurred while searching the account.");
+    });
 }
