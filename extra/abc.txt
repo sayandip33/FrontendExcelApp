@@ -28,7 +28,7 @@ function validateAndUpload1() {
 
       // Display success message
       if (successMsg) {
-        document.getElementById("response").innerText = successMsg;
+        document.getElementById("response").textContent = successMsg;
         if (typeof showSuccessAlert === "function") {
           showSuccessAlert(successMsg);
         }
@@ -36,7 +36,7 @@ function validateAndUpload1() {
 
       // Display failure message
       if (failureMsg) {
-        document.getElementById("errorResponse").innerText = failureMsg;
+        document.getElementById("errorResponse").textContent = failureMsg;
         if (typeof showFailureAlert === "function") {
           showFailureAlert(failureMsg);
         }
@@ -96,7 +96,7 @@ function searchAccount1() {
 
         // Append cells safely
         row.appendChild(createCell(data.accountNumber));
-        
+
         const activeCell = createCell("", "activeCell");
         const spanActive = document.createElement("span");
         spanActive.id = "activeValue";
@@ -281,8 +281,8 @@ function updateTransfer(accountNumber) {
 function clearUpload1() {
   const fileInput = document.getElementById("excelFile");
   fileInput.value = ""; // Reset the file input
-  document.getElementById("response").innerText = ""; // Clear success message
-  document.getElementById("errorResponse").innerText = ""; // Clear error message
+  document.getElementById("response").textContent = ""; // Clear success message
+  document.getElementById("errorResponse").textContent = ""; // Clear error message
 }
 
 // Download failure details if present
@@ -309,7 +309,7 @@ function downloadFailureDetailsIfPresent(responseData) {
 // Show success alert message
 function showSuccessAlert(message) {
   const alertBox = document.getElementById("successAlert");
-  document.getElementById("alertMessage").innerText = message;
+  document.getElementById("alertMessage").textContent = message;
   alertBox.style.display = "block";
 
   // Auto-hide after 5 seconds
@@ -326,7 +326,7 @@ function closeAlert() {
 // Show failure alert message
 function showFailureAlert(message) {
   const alertBox = document.getElementById("failureAlert");
-  document.getElementById("failureMessage").innerText = message;
+  document.getElementById("failureMessage").textContent = message;
   alertBox.style.display = "block";
 
   // Auto-hide after 5 seconds
