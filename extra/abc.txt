@@ -1,3 +1,17 @@
+// Helper function to escape HTML
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, function (tag) {
+    const charsToReplace = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return charsToReplace[tag] || tag;
+  });
+}
+
 function validateAndUpload1() {
   const fileInput = document.getElementById("excelFile");
   const file = fileInput.files[0];
@@ -19,8 +33,8 @@ function validateAndUpload1() {
       console.log('msg:', msg);
       downloadFailureDetailsIfPresent(msg);
 
-      const successMsg = msg.success?.[0] || "";
-      const failureMsg = msg.failure?.[0] || "";
+      const successMsg = msg.success?.[0];
+      const failureMsg = msg.failure?.[0];
       const logFile = msg.logFile?.[0] || "";
 
       if (successMsg) {
@@ -56,7 +70,7 @@ function searchAccount1() {
   const acc = document.getElementById("searchAccount").value.trim();
 
   if (!/^\d{14}$/.test(acc)) {
-    showFailureAlert("Enter a valid 14-digit account number (numbers only).");
+    showFailureAlert("Enter a valid 14-digit account number (numbers only).\");
     return;
   }
 
@@ -66,9 +80,7 @@ function searchAccount1() {
   fetch("search", {
     method: "POST",
     body: formData,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
   })
     .then(res => res.json())
     .then(data => {
@@ -77,53 +89,110 @@ function searchAccount1() {
 
       if (data && data.accountNumber) {
         const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${escapeHtml(data.accountNumber)}</td>
-          <td id="activeCell"><span id="activeValue">${escapeHtml(data.active)}</span></td>
-          <td>${escapeHtml(data.appName)}</td>
-          <td>${escapeHtml(data.createdBy)}</td>
-          <td>${escapeHtml(data.createdTime)}</td>
-          <td id="transferCell"><span id="transferValue">${escapeHtml(data.transferNumber)}</span></td>
-          <td>${escapeHtml(data.updatedBy)}</td>
-          <td>${escapeHtml(data.updatedTime)}</td>
-          <td id="actionCell">
-            <button class="sid" onclick="enableEdit('${data.transferNumber}', '${data.accountNumber}', '${data.active}')">Edit</button>
-          </td>
-        `;
+
+        const fields = [
+          data.accountNumber,
+          data.active,
+          data.appName,
+          data.createdBy,
+          data.createdTime,
+          data.transferNumber,
+          data.updatedBy,
+          data.updatedTime
+        ];
+
+        fields.forEach(field => {
+          const td = document.createElement("td");
+          td.textContent = field;
+          row.appendChild(td);
+        });
+
+        const actionTd = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.className = "sid";
+        btn.textContent = "Edit";
+        btn.onclick = () => enableEdit(data.transferNumber, data.accountNumber, data.active);
+        actionTd.appendChild(btn);
+        row.appendChild(actionTd);
+
         tbody.appendChild(row);
       } else {
-        tbody.innerHTML = `<tr><td colspan='9' class="sidError">${escapeHtml(data.msg || "No data found")}</td></tr>`;
+        const row = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 9;
+        td.className = "sidError";
+        td.textContent = data.msg;
+        row.appendChild(td);
+        tbody.appendChild(row);
       }
-    })
-    .catch(err => {
-      console.error(err);
-      showFailureAlert("Failed to fetch account details.");
     });
 }
 
 function enableEdit(transferNumber, accountNumber, active) {
-  document.getElementById("transferCell").innerHTML =
-    `<input type="text" id="editTransfer" value="${escapeHtml(transferNumber)}" maxlength="10"/>`;
-  document.getElementById("activeCell").innerHTML =
-    `<input type="text" id="editActive" value="${escapeHtml(active)}" maxlength="1"/>`;
-  document.getElementById("actionCell").innerHTML =
-    `<button class="sidUpdate" onclick="updateTransfer('${accountNumber}')">Update</button>
-     <button class="sidCancel" onclick="cancelEdit('${transferNumber}', '${accountNumber}', '${active}')">Cancel</button>`;
+  const transferCell = document.getElementById("transferCell");
+  const activeCell = document.getElementById("activeCell");
+  const actionCell = document.getElementById("actionCell");
+
+  transferCell.innerHTML = "";
+  activeCell.innerHTML = "";
+  actionCell.innerHTML = "";
+
+  const transferInput = document.createElement("input");
+  transferInput.type = "text";
+  transferInput.id = "editTransfer";
+  transferInput.maxLength = 10;
+  transferInput.value = transferNumber;
+  transferCell.appendChild(transferInput);
+
+  const activeInput = document.createElement("input");
+  activeInput.type = "text";
+  activeInput.id = "editActive";
+  activeInput.maxLength = 1;
+  activeInput.value = active;
+  activeCell.appendChild(activeInput);
+
+  const updateBtn = document.createElement("button");
+  updateBtn.className = "sidUpdate";
+  updateBtn.textContent = "Update";
+  updateBtn.onclick = () => updateTransfer(accountNumber);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "sidCancel";
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.onclick = () => cancelEdit(transferNumber, accountNumber, active);
+
+  actionCell.appendChild(updateBtn);
+  actionCell.appendChild(cancelBtn);
 }
 
 function cancelEdit(originalValue, accountNumber, activeValue) {
-  document.getElementById("transferCell").innerHTML = `<span id="transferValue">${escapeHtml(originalValue)}</span>`;
-  document.getElementById("activeCell").innerHTML = `<span id="activeValue">${escapeHtml(activeValue)}</span>`;
-  document.getElementById("actionCell").innerHTML =
-    `<button class="sid" onclick="enableEdit('${originalValue}', '${accountNumber}', '${activeValue}')">Edit</button>`;
+  const transferSpan = document.createElement("span");
+  transferSpan.id = "transferValue";
+  transferSpan.textContent = originalValue;
+  document.getElementById("transferCell").innerHTML = "";
+  document.getElementById("transferCell").appendChild(transferSpan);
+
+  const activeSpan = document.createElement("span");
+  activeSpan.id = "activeValue";
+  activeSpan.textContent = activeValue;
+  document.getElementById("activeCell").innerHTML = "";
+  document.getElementById("activeCell").appendChild(activeSpan);
+
+  const actionCell = document.getElementById("actionCell");
+  actionCell.innerHTML = "";
+  const editBtn = document.createElement("button");
+  editBtn.className = "sid";
+  editBtn.textContent = "Edit";
+  editBtn.onclick = () => enableEdit(originalValue, accountNumber, activeValue);
+  actionCell.appendChild(editBtn);
 }
 
 function updateTransfer(accountNumber) {
   const newTransferNumber = document.getElementById("editTransfer").value.trim();
-  const newActive = document.getElementById("editActive").value.trim().toUpperCase();
+  const newActive = document.getElementById("editActive").value.trim();
 
   if (!newTransferNumber || !newActive) {
-    showFailureAlert("Fields cannot be empty.");
+    showFailureAlert("Field cannot be empty.");
     return;
   }
 
@@ -132,8 +201,8 @@ function updateTransfer(accountNumber) {
     return;
   }
 
-  if (!/^[YN]$/.test(newActive)) {
-    showFailureAlert("Please enter only 'Y' or 'N' for Active status.");
+  if (!/^[YN]$/i.test(newActive)) {
+    showFailureAlert("Please enter only 'Y' or 'N'.");
     return;
   }
 
@@ -145,18 +214,17 @@ function updateTransfer(accountNumber) {
   fetch("update-transfer", {
     method: "POST",
     body: formData,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
   })
     .then(res => res.json())
     .then(response => {
       if (response.failure) {
         showFailureAlert("Error updating Transfer Number.");
         return;
+      } else {
+        searchAccount1();
+        showSuccessAlert("Fields updated successfully.");
       }
-      showSuccessAlert("Fields updated successfully.");
-      searchAccount1(); // Refresh data
     })
     .catch(err => {
       console.error(err);
@@ -167,16 +235,16 @@ function updateTransfer(accountNumber) {
 function clearUpload1() {
   const fileInput = document.getElementById("excelFile");
   fileInput.value = "";
-  document.getElementById("response").innerText = "";
-  document.getElementById("errorResponse").innerText = "";
+  document.getElementById("response").textContent = "";
+  document.getElementById("errorResponse").textContent = "";
 }
 
 function downloadFailureDetailsIfPresent(responseData) {
   const failureDetails = responseData.failureDetails;
 
-  if (Array.isArray(failureDetails) && failureDetails.length > 0) {
-    const content = failureDetails.join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  if (failureDetails && Array.isArray(failureDetails) && failureDetails.length > 0) {
+    const content = failureDetails.map(line => line.replace(/[<>]/g, '')).join('\n');
+    const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
@@ -211,17 +279,4 @@ function showFailureAlert(message) {
 function closeFailureAlert() {
   const alertBox = document.getElementById("failureAlert");
   alertBox.style.display = "none";
-}
-
-// Escape HTML to prevent injection
-function escapeHtml(text) {
-  return text?.replace(/[&<>"']/g, function (match) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;"
-    }[match];
-  }) || "";
 }
