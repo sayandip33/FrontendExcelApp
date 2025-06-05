@@ -1,114 +1,26 @@
-.then(res => res.json())
-.then(data => {
-    const tbody = document.getElementById("resultBody");
-    tbody.innerHTML = ""; // Clear previous results
+function downloadFailureDetailsIfPresent(responseData) {
+    const failureDetails = responseData.failureDetails;
 
-    console.log("data:", data);
-    console.log("data.msg:", data.msg);
+    if (Array.isArray(failureDetails) && failureDetails.length > 0) {
+        const content = failureDetails.join('\n');
+        const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
+        const url = URL.createObjectURL(blob);
 
-    if (data && data.accountNumber) {
-        const row = document.createElement("tr");
+        // Create the download link but DO NOT attach it to the DOM
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "upload_failures.txt";
 
-        // Safely create each cell with textContent
-        const fields = [
-            data.accountNumber,
-            "", // Will be replaced by activeCell below
-            data.appName,
-            data.createdBy,
-            data.createdTime,
-            "", // Will be replaced by transferCell below
-            data.updatedBy,
-            data.updatedTime,
-            ""  // Will be replaced by actionCell below
-        ];
-
-        fields.forEach((value, index) => {
-            const td = document.createElement("td");
-
-            if (index === 1) {
-                // Active Cell
-                td.id = "activeCell";
-                const span = document.createElement("span");
-                span.id = "activeValue";
-                span.textContent = data.active;
-                td.appendChild(span);
-            } else if (index === 5) {
-                // Transfer Cell
-                td.id = "transferCell";
-                const span = document.createElement("span");
-                span.id = "transferValue";
-                span.textContent = data.transferNumber;
-                td.appendChild(span);
-            } else if (index === 8) {
-                // Action Cell
-                td.id = "actionCell";
-                const button = document.createElement("button");
-                button.className = "sid";
-                button.textContent = "Edit";
-                button.setAttribute("onclick", `enableEdit('${data.transferNumber}', '${data.accountNumber}', '${data.active}')`);
-                td.appendChild(button);
-            } else {
-                td.textContent = value;
-            }
-
-            row.appendChild(td);
+        // Use MouseEvent to simulate the click without DOM insertion
+        const clickEvent = new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true
         });
 
-        tbody.appendChild(row);
-    } else {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 9;
-        cell.className = "sidError";
-        cell.textContent = data.msg || "No data found";
-        row.appendChild(cell);
-        tbody.appendChild(row);
+        a.dispatchEvent(clickEvent);
+
+        // Cleanup
+        URL.revokeObjectURL(url);
     }
-})
-.catch(error => {
-    console.error("Error fetching data:", error);
-});
-
-
-
-
-
-
-
-
-
-
-function escapeHTML(str) {
-    return str.replace(/[&<>"']/g, function (match) {
-        const escapes = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-        };
-        return escapes[match];
-    });
 }
-
-
-
-element.innerHTML = `<div>${escapeHTML(userInput)}</div>`; // Safer than raw insertion
-
-
-❌ Before (Vulnerable):
-
-tbody.innerHTML = `<tr><td colspan='9' class="sidError">${data.msg}</td></tr>`;
-
-
-
-✅ After (Escaped):
-
-const row = document.createElement("tr");
-const cell = document.createElement("td");
-cell.colSpan = 9;
-cell.className = "sidError";
-cell.textContent = data.msg; // Safe: auto-escapes dangerous content
-row.appendChild(cell);
-tbody.innerHTML = ""; // clear previous content
-tbody.appendChild(row);
