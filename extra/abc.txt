@@ -1,6 +1,8 @@
+// Validate and upload Excel file
 function validateAndUpload1() {
   const fileInput = document.getElementById("excelFile");
   const file = fileInput.files[0];
+
   if (!file || !file.name.endsWith(".xlsx")) {
     showFailureAlert("Please upload a valid .xlsx file.");
     return;
@@ -15,30 +17,39 @@ function validateAndUpload1() {
   })
     .then(res => res.json())
     .then(msg => {
-      console.log('msg : ', msg);
+      console.log("msg:", msg);
+
+      // Download inline failure list if present
+      downloadFailureDetailsIfPresent(msg);
 
       const successMsg = msg.success?.[0] || "";
       const failureMsg = msg.failure?.[0] || "";
-      const logFile = msg.logFile?.[0];
+      const logFile = msg.logFile?.[0] || "";
 
-      // Show success message
+      // Display success message
       if (successMsg) {
         document.getElementById("response").innerText = successMsg;
+        if (typeof showSuccessAlert === "function") {
+          showSuccessAlert(successMsg);
+        }
       }
 
-      // Show failure message
+      // Display failure message
       if (failureMsg) {
         document.getElementById("errorResponse").innerText = failureMsg;
-
-        // Auto-download log file if available
-        if (logFile) {
-          const a = document.createElement("a");
-          a.href = `downloadLog?fileName=${encodeURIComponent(logFile)}`;
-          a.download = logFile;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+        if (typeof showFailureAlert === "function") {
+          showFailureAlert(failureMsg);
         }
+      }
+
+      // Auto-download server-generated log file (optional)
+      if (logFile) {
+        const a = document.createElement("a");
+        a.href = `download-log?fileName=${encodeURIComponent(logFile)}`;
+        a.download = logFile;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     })
     .catch(err => {
@@ -47,10 +58,10 @@ function validateAndUpload1() {
     });
 }
 
+// Search account by 14-digit number
 function searchAccount1() {
   const acc = document.getElementById("searchAccount").value.trim();
 
-  // Validate: exactly 14 digits only
   if (!/^\d{14}$/.test(acc)) {
     showFailureAlert("Enter a valid 14-digit account number (numbers only).");
     return;
@@ -70,69 +81,54 @@ function searchAccount1() {
     .then(data => {
       const tbody = document.getElementById("resultBody");
       tbody.innerHTML = ""; // Clear previous results
-      console.log("data : ", data);
+      console.log("data:", data);
 
       if (data && data.accountNumber) {
         const row = document.createElement("tr");
 
-        // Create each cell safely
-        const createCell = (text, id) => {
+        // Helper to create cell with optional id and text content
+        const createCell = (text = "", id) => {
           const td = document.createElement("td");
           if (id) td.id = id;
-          td.textContent = text || "";
+          td.textContent = text;
           return td;
         };
 
-        // accountNumber
+        // Append cells safely
         row.appendChild(createCell(data.accountNumber));
-
-        // activeCell with span
-        const tdActive = document.createElement("td");
-        tdActive.id = "activeCell";
+        
+        const activeCell = createCell("", "activeCell");
         const spanActive = document.createElement("span");
         spanActive.id = "activeValue";
         spanActive.textContent = data.active || "";
-        tdActive.appendChild(spanActive);
-        row.appendChild(tdActive);
+        activeCell.appendChild(spanActive);
+        row.appendChild(activeCell);
 
-        // appName
         row.appendChild(createCell(data.appName));
-
-        // createdBy
         row.appendChild(createCell(data.createdBy));
-
-        // createdTime
         row.appendChild(createCell(data.createdTime));
 
-        // transferCell with span
-        const tdTransfer = document.createElement("td");
-        tdTransfer.id = "transferCell";
+        const transferCell = createCell("", "transferCell");
         const spanTransfer = document.createElement("span");
         spanTransfer.id = "transferValue";
         spanTransfer.textContent = data.transferNumber || "";
-        tdTransfer.appendChild(spanTransfer);
-        row.appendChild(tdTransfer);
+        transferCell.appendChild(spanTransfer);
+        row.appendChild(transferCell);
 
-        // updatedBy
         row.appendChild(createCell(data.updatedBy));
-
-        // updatedTime
         row.appendChild(createCell(data.updatedTime));
 
-        // actionCell with button
-        const tdAction = document.createElement("td");
-        tdAction.id = "actionCell";
+        // Action cell with Edit button
+        const actionCell = document.createElement("td");
+        actionCell.id = "actionCell";
         const btnEdit = document.createElement("button");
         btnEdit.className = "sid";
         btnEdit.textContent = "Edit";
-
-        // Attach event listener safely (avoid inline onclick)
         btnEdit.addEventListener("click", () => {
           enableEdit(data.transferNumber, data.accountNumber, data.active);
         });
-
-        tdAction.appendChild(btnEdit);
-        row.appendChild(tdAction);
+        actionCell.appendChild(btnEdit);
+        row.appendChild(actionCell);
 
         tbody.appendChild(row);
       } else if (data && data.msg) {
@@ -152,9 +148,7 @@ function searchAccount1() {
     });
 }
 
-
-
-
+// Enable edit mode for transferNumber and active fields
 function enableEdit(transferNumber, accountNumber, active) {
   const transferCell = document.getElementById("transferCell");
   const activeCell = document.getElementById("activeCell");
@@ -197,7 +191,151 @@ function enableEdit(transferNumber, accountNumber, active) {
     cancelEdit(transferNumber, accountNumber, active);
   });
 
-  // Append buttons to actionCell
   actionCell.appendChild(btnUpdate);
   actionCell.appendChild(btnCancel);
+}
+
+// Cancel edit, restore original values
+function cancelEdit(originalTransfer, accountNumber, originalActive) {
+  const transferCell = document.getElementById("transferCell");
+  const activeCell = document.getElementById("activeCell");
+  const actionCell = document.getElementById("actionCell");
+
+  // Restore transfer number display
+  transferCell.textContent = "";
+  const spanTransfer = document.createElement("span");
+  spanTransfer.id = "transferValue";
+  spanTransfer.textContent = originalTransfer || "";
+  transferCell.appendChild(spanTransfer);
+
+  // Restore active display
+  activeCell.textContent = "";
+  const spanActive = document.createElement("span");
+  spanActive.id = "activeValue";
+  spanActive.textContent = originalActive || "";
+  activeCell.appendChild(spanActive);
+
+  // Restore Edit button
+  actionCell.textContent = "";
+  const btnEdit = document.createElement("button");
+  btnEdit.className = "sid";
+  btnEdit.textContent = "Edit";
+  btnEdit.addEventListener("click", () => {
+    enableEdit(originalTransfer, accountNumber, originalActive);
+  });
+  actionCell.appendChild(btnEdit);
+}
+
+// Update transfer number and active status
+function updateTransfer(accountNumber) {
+  const newTransferNumber = document.getElementById("editTransfer").value.trim();
+  const newActive = document.getElementById("editActive").value.trim();
+
+  if (!newTransferNumber || !newActive) {
+    showFailureAlert("Fields cannot be empty.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(newTransferNumber)) {
+    showFailureAlert("Enter valid 10-digit Transfer number.");
+    return;
+  }
+
+  if (!/^[YN]$/i.test(newActive)) {
+    showFailureAlert("Please enter only 'Y' or 'N' for Active.");
+    return;
+  }
+
+  const formData = new URLSearchParams();
+  formData.append("accountNumber", accountNumber);
+  formData.append("transferNumber", newTransferNumber);
+  formData.append("active", newActive);
+
+  fetch("update-transfer", {
+    method: "POST",
+    body: formData,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
+  })
+    .then(res => res.json())
+    .then(response => {
+      console.log("response:", response);
+
+      if (response.failure) {
+        showFailureAlert("Error updating Transfer Number.");
+        return;
+      } else {
+        // Optionally re-fetch data to refresh table
+        searchAccount1();
+        showSuccessAlert("Transfer Number updated successfully.");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showFailureAlert("Error updating Transfer Number.");
+    });
+}
+
+// Clear upload form and messages
+function clearUpload1() {
+  const fileInput = document.getElementById("excelFile");
+  fileInput.value = ""; // Reset the file input
+  document.getElementById("response").innerText = ""; // Clear success message
+  document.getElementById("errorResponse").innerText = ""; // Clear error message
+}
+
+// Download failure details if present
+function downloadFailureDetailsIfPresent(responseData) {
+  const failureDetails = responseData.failureDetails;
+
+  if (failureDetails && Array.isArray(failureDetails) && failureDetails.length > 0) {
+    const content = failureDetails.join("\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "upload_failures.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Cleanup the object URL
+    URL.revokeObjectURL(url);
+  }
+}
+
+// Show success alert message
+function showSuccessAlert(message) {
+  const alertBox = document.getElementById("successAlert");
+  document.getElementById("alertMessage").innerText = message;
+  alertBox.style.display = "block";
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    closeAlert();
+  }, 5000);
+}
+
+function closeAlert() {
+  const alertBox = document.getElementById("successAlert");
+  alertBox.style.display = "none";
+}
+
+// Show failure alert message
+function showFailureAlert(message) {
+  const alertBox = document.getElementById("failureAlert");
+  document.getElementById("failureMessage").innerText = message;
+  alertBox.style.display = "block";
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    closeFailureAlert();
+  }, 5000);
+}
+
+function closeFailureAlert() {
+  const alertBox = document.getElementById("failureAlert");
+  alertBox.style.display = "none";
 }
