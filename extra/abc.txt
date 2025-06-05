@@ -1,16 +1,153 @@
-if (logFile && /^[\w.\-]+$/.test(logFile)) {
-  const a = document.createElement("a");
+function validateAndUpload1() {
+  const fileInput = document.getElementById("excelFile");
+  const file = fileInput.files[0];
+  if (!file || !file.name.endsWith(".xlsx")) {
+    showFailureAlert("Please upload a valid .xlsx file.");
+    return;
+  }
 
-  // Use only a validated and encoded file name
-  const safeFileName = encodeURIComponent(logFile);
-  a.href = `downloadLog?fileName=${safeFileName}`;
-  a.download = logFile;
+  const formData = new FormData();
+  formData.append("file", file);
 
-  // Optional: make it invisible and remove safely
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-} else {
-  console.warn("Invalid log file name provided. Skipping download.");
+  fetch("upload", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(msg => {
+      console.log('msg : ', msg);
+
+      const successMsg = msg.success?.[0] || "";
+      const failureMsg = msg.failure?.[0] || "";
+      const logFile = msg.logFile?.[0];
+
+      // Show success message
+      if (successMsg) {
+        document.getElementById("response").innerText = successMsg;
+      }
+
+      // Show failure message
+      if (failureMsg) {
+        document.getElementById("errorResponse").innerText = failureMsg;
+
+        // Auto-download log file if available
+        if (logFile) {
+          const a = document.createElement("a");
+          a.href = `downloadLog?fileName=${encodeURIComponent(logFile)}`;
+          a.download = logFile;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+      }
+    })
+    .catch(err => {
+      console.error("Upload failed:", err);
+      showFailureAlert("Something went wrong during upload. Please try again.");
+    });
+}
+
+function searchAccount1() {
+  const acc = document.getElementById("searchAccount").value.trim();
+
+  // Validate: exactly 14 digits only
+  if (!/^\d{14}$/.test(acc)) {
+    showFailureAlert("Enter a valid 14-digit account number (numbers only).");
+    return;
+  }
+
+  const formData = new URLSearchParams();
+  formData.append("accountNumber", acc);
+
+  fetch("search", {
+    method: "POST",
+    body: formData,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("resultBody");
+      tbody.innerHTML = ""; // Clear previous results
+      console.log("data : ", data);
+
+      if (data && data.accountNumber) {
+        const row = document.createElement("tr");
+
+        // Create each cell safely
+        const createCell = (text, id) => {
+          const td = document.createElement("td");
+          if (id) td.id = id;
+          td.textContent = text || "";
+          return td;
+        };
+
+        // accountNumber
+        row.appendChild(createCell(data.accountNumber));
+
+        // activeCell with span
+        const tdActive = document.createElement("td");
+        tdActive.id = "activeCell";
+        const spanActive = document.createElement("span");
+        spanActive.id = "activeValue";
+        spanActive.textContent = data.active || "";
+        tdActive.appendChild(spanActive);
+        row.appendChild(tdActive);
+
+        // appName
+        row.appendChild(createCell(data.appName));
+
+        // createdBy
+        row.appendChild(createCell(data.createdBy));
+
+        // createdTime
+        row.appendChild(createCell(data.createdTime));
+
+        // transferCell with span
+        const tdTransfer = document.createElement("td");
+        tdTransfer.id = "transferCell";
+        const spanTransfer = document.createElement("span");
+        spanTransfer.id = "transferValue";
+        spanTransfer.textContent = data.transferNumber || "";
+        tdTransfer.appendChild(spanTransfer);
+        row.appendChild(tdTransfer);
+
+        // updatedBy
+        row.appendChild(createCell(data.updatedBy));
+
+        // updatedTime
+        row.appendChild(createCell(data.updatedTime));
+
+        // actionCell with button
+        const tdAction = document.createElement("td");
+        tdAction.id = "actionCell";
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "sid";
+        btnEdit.textContent = "Edit";
+
+        // Attach event listener safely (avoid inline onclick)
+        btnEdit.addEventListener("click", () => {
+          enableEdit(data.transferNumber, data.accountNumber, data.active);
+        });
+
+        tdAction.appendChild(btnEdit);
+        row.appendChild(tdAction);
+
+        tbody.appendChild(row);
+      } else if (data && data.msg) {
+        // Show error message row safely
+        const errorRow = document.createElement("tr");
+        const errorCell = document.createElement("td");
+        errorCell.colSpan = 9;
+        errorCell.className = "sidError";
+        errorCell.textContent = data.msg;
+        errorRow.appendChild(errorCell);
+        tbody.appendChild(errorRow);
+      }
+    })
+    .catch(err => {
+      console.error("Search failed:", err);
+      showFailureAlert("Something went wrong during search. Please try again.");
+    });
 }
