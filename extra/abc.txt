@@ -1,4 +1,4 @@
-// Validate and upload Excel file
+// 1. Validate and upload Excel file
 function validateAndUpload1() {
   const fileInput = document.getElementById("excelFile");
   const file = fileInput.files[0];
@@ -19,14 +19,12 @@ function validateAndUpload1() {
     .then(msg => {
       console.log("msg:", msg);
 
-      // Download inline failure list if present
       downloadFailureDetailsIfPresent(msg);
 
       const successMsg = msg.success?.[0] || "";
       const failureMsg = msg.failure?.[0] || "";
       const logFile = msg.logFile?.[0] || "";
 
-      // Display success message
       if (successMsg) {
         document.getElementById("response").textContent = successMsg;
         if (typeof showSuccessAlert === "function") {
@@ -34,7 +32,6 @@ function validateAndUpload1() {
         }
       }
 
-      // Display failure message
       if (failureMsg) {
         document.getElementById("errorResponse").textContent = failureMsg;
         if (typeof showFailureAlert === "function") {
@@ -42,7 +39,6 @@ function validateAndUpload1() {
         }
       }
 
-      // Auto-download server-generated log file (optional)
       if (logFile) {
         const a = document.createElement("a");
         a.href = `download-log?fileName=${encodeURIComponent(logFile)}`;
@@ -58,7 +54,7 @@ function validateAndUpload1() {
     });
 }
 
-// Search account by 14-digit number
+// 2. Search account by 14-digit number
 function searchAccount1() {
   const acc = document.getElementById("searchAccount").value.trim();
 
@@ -86,7 +82,7 @@ function searchAccount1() {
       if (data && data.accountNumber) {
         const row = document.createElement("tr");
 
-        // Helper to create cell with optional id and text content
+        // Helper to create td with optional id and text content
         const createCell = (text = "", id) => {
           const td = document.createElement("td");
           if (id) td.id = id;
@@ -94,9 +90,9 @@ function searchAccount1() {
           return td;
         };
 
-        // Append cells safely
         row.appendChild(createCell(data.accountNumber));
 
+        // Active cell with span
         const activeCell = createCell("", "activeCell");
         const spanActive = document.createElement("span");
         spanActive.id = "activeValue";
@@ -108,6 +104,7 @@ function searchAccount1() {
         row.appendChild(createCell(data.createdBy));
         row.appendChild(createCell(data.createdTime));
 
+        // Transfer cell with span
         const transferCell = createCell("", "transferCell");
         const spanTransfer = document.createElement("span");
         spanTransfer.id = "transferValue";
@@ -132,7 +129,7 @@ function searchAccount1() {
 
         tbody.appendChild(row);
       } else if (data && data.msg) {
-        // Show error message row safely
+        // Show error message safely
         const errorRow = document.createElement("tr");
         const errorCell = document.createElement("td");
         errorCell.colSpan = 9;
@@ -148,7 +145,7 @@ function searchAccount1() {
     });
 }
 
-// Enable edit mode for transferNumber and active fields
+// 3. Enable edit mode for transferNumber and active fields
 function enableEdit(transferNumber, accountNumber, active) {
   const transferCell = document.getElementById("transferCell");
   const activeCell = document.getElementById("activeCell");
@@ -195,27 +192,24 @@ function enableEdit(transferNumber, accountNumber, active) {
   actionCell.appendChild(btnCancel);
 }
 
-// Cancel edit, restore original values
+// 4. Cancel edit, restore original values
 function cancelEdit(originalTransfer, accountNumber, originalActive) {
   const transferCell = document.getElementById("transferCell");
   const activeCell = document.getElementById("activeCell");
   const actionCell = document.getElementById("actionCell");
 
-  // Restore transfer number display
   transferCell.textContent = "";
   const spanTransfer = document.createElement("span");
   spanTransfer.id = "transferValue";
   spanTransfer.textContent = originalTransfer || "";
   transferCell.appendChild(spanTransfer);
 
-  // Restore active display
   activeCell.textContent = "";
   const spanActive = document.createElement("span");
   spanActive.id = "activeValue";
   spanActive.textContent = originalActive || "";
   activeCell.appendChild(spanActive);
 
-  // Restore Edit button
   actionCell.textContent = "";
   const btnEdit = document.createElement("button");
   btnEdit.className = "sid";
@@ -226,7 +220,7 @@ function cancelEdit(originalTransfer, accountNumber, originalActive) {
   actionCell.appendChild(btnEdit);
 }
 
-// Update transfer number and active status
+// 5. Update transfer number and active status
 function updateTransfer(accountNumber) {
   const newTransferNumber = document.getElementById("editTransfer").value.trim();
   const newActive = document.getElementById("editActive").value.trim();
@@ -266,8 +260,7 @@ function updateTransfer(accountNumber) {
         showFailureAlert("Error updating Transfer Number.");
         return;
       } else {
-        // Optionally re-fetch data to refresh table
-        searchAccount1();
+        searchAccount1(); // Refresh data
         showSuccessAlert("Transfer Number updated successfully.");
       }
     })
@@ -277,15 +270,15 @@ function updateTransfer(accountNumber) {
     });
 }
 
-// Clear upload form and messages
+// 6. Clear upload form and messages
 function clearUpload1() {
   const fileInput = document.getElementById("excelFile");
-  fileInput.value = ""; // Reset the file input
-  document.getElementById("response").textContent = ""; // Clear success message
-  document.getElementById("errorResponse").textContent = ""; // Clear error message
+  fileInput.value = "";
+  document.getElementById("response").textContent = "";
+  document.getElementById("errorResponse").textContent = "";
 }
 
-// Download failure details if present
+// 7. Download failure details if present
 function downloadFailureDetailsIfPresent(responseData) {
   const failureDetails = responseData.failureDetails;
 
@@ -301,18 +294,16 @@ function downloadFailureDetailsIfPresent(responseData) {
     a.click();
     document.body.removeChild(a);
 
-    // Cleanup the object URL
     URL.revokeObjectURL(url);
   }
 }
 
-// Show success alert message
+// 8. Show success alert
 function showSuccessAlert(message) {
   const alertBox = document.getElementById("successAlert");
   document.getElementById("alertMessage").textContent = message;
   alertBox.style.display = "block";
 
-  // Auto-hide after 5 seconds
   setTimeout(() => {
     closeAlert();
   }, 5000);
@@ -323,13 +314,12 @@ function closeAlert() {
   alertBox.style.display = "none";
 }
 
-// Show failure alert message
+// 9. Show failure alert
 function showFailureAlert(message) {
   const alertBox = document.getElementById("failureAlert");
   document.getElementById("failureMessage").textContent = message;
   alertBox.style.display = "block";
 
-  // Auto-hide after 5 seconds
   setTimeout(() => {
     closeFailureAlert();
   }, 5000);
