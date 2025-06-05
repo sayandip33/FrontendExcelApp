@@ -1,4 +1,3 @@
-// 1. Validate and upload Excel file
 function validateAndUpload1() {
   const fileInput = document.getElementById("excelFile");
   const file = fileInput.files[0];
@@ -17,8 +16,7 @@ function validateAndUpload1() {
   })
     .then(res => res.json())
     .then(msg => {
-      console.log("msg:", msg);
-
+      console.log('msg:', msg);
       downloadFailureDetailsIfPresent(msg);
 
       const successMsg = msg.success?.[0] || "";
@@ -54,7 +52,6 @@ function validateAndUpload1() {
     });
 }
 
-// 2. Search account by 14-digit number
 function searchAccount1() {
   const acc = document.getElementById("searchAccount").value.trim();
 
@@ -76,154 +73,54 @@ function searchAccount1() {
     .then(res => res.json())
     .then(data => {
       const tbody = document.getElementById("resultBody");
-      tbody.innerHTML = ""; // Clear previous results
-      console.log("data:", data);
+      tbody.innerHTML = "";
 
       if (data && data.accountNumber) {
         const row = document.createElement("tr");
-
-        // Helper to create td with optional id and text content
-        const createCell = (text = "", id) => {
-          const td = document.createElement("td");
-          if (id) td.id = id;
-          td.textContent = text;
-          return td;
-        };
-
-        row.appendChild(createCell(data.accountNumber));
-
-        // Active cell with span
-        const activeCell = createCell("", "activeCell");
-        const spanActive = document.createElement("span");
-        spanActive.id = "activeValue";
-        spanActive.textContent = data.active || "";
-        activeCell.appendChild(spanActive);
-        row.appendChild(activeCell);
-
-        row.appendChild(createCell(data.appName));
-        row.appendChild(createCell(data.createdBy));
-        row.appendChild(createCell(data.createdTime));
-
-        // Transfer cell with span
-        const transferCell = createCell("", "transferCell");
-        const spanTransfer = document.createElement("span");
-        spanTransfer.id = "transferValue";
-        spanTransfer.textContent = data.transferNumber || "";
-        transferCell.appendChild(spanTransfer);
-        row.appendChild(transferCell);
-
-        row.appendChild(createCell(data.updatedBy));
-        row.appendChild(createCell(data.updatedTime));
-
-        // Action cell with Edit button
-        const actionCell = document.createElement("td");
-        actionCell.id = "actionCell";
-        const btnEdit = document.createElement("button");
-        btnEdit.className = "sid";
-        btnEdit.textContent = "Edit";
-        btnEdit.addEventListener("click", () => {
-          enableEdit(data.transferNumber, data.accountNumber, data.active);
-        });
-        actionCell.appendChild(btnEdit);
-        row.appendChild(actionCell);
-
+        row.innerHTML = `
+          <td>${escapeHtml(data.accountNumber)}</td>
+          <td id="activeCell"><span id="activeValue">${escapeHtml(data.active)}</span></td>
+          <td>${escapeHtml(data.appName)}</td>
+          <td>${escapeHtml(data.createdBy)}</td>
+          <td>${escapeHtml(data.createdTime)}</td>
+          <td id="transferCell"><span id="transferValue">${escapeHtml(data.transferNumber)}</span></td>
+          <td>${escapeHtml(data.updatedBy)}</td>
+          <td>${escapeHtml(data.updatedTime)}</td>
+          <td id="actionCell">
+            <button class="sid" onclick="enableEdit('${data.transferNumber}', '${data.accountNumber}', '${data.active}')">Edit</button>
+          </td>
+        `;
         tbody.appendChild(row);
-      } else if (data && data.msg) {
-        // Show error message safely
-        const errorRow = document.createElement("tr");
-        const errorCell = document.createElement("td");
-        errorCell.colSpan = 9;
-        errorCell.className = "sidError";
-        errorCell.textContent = data.msg;
-        errorRow.appendChild(errorCell);
-        tbody.appendChild(errorRow);
+      } else {
+        tbody.innerHTML = `<tr><td colspan='9' class="sidError">${escapeHtml(data.msg || "No data found")}</td></tr>`;
       }
     })
     .catch(err => {
-      console.error("Search failed:", err);
-      showFailureAlert("Something went wrong during search. Please try again.");
+      console.error(err);
+      showFailureAlert("Failed to fetch account details.");
     });
 }
 
-// 3. Enable edit mode for transferNumber and active fields
 function enableEdit(transferNumber, accountNumber, active) {
-  const transferCell = document.getElementById("transferCell");
-  const activeCell = document.getElementById("activeCell");
-  const actionCell = document.getElementById("actionCell");
-
-  // Clear existing content
-  transferCell.textContent = "";
-  activeCell.textContent = "";
-  actionCell.textContent = "";
-
-  // Create input for transferNumber
-  const inputTransfer = document.createElement("input");
-  inputTransfer.type = "text";
-  inputTransfer.id = "editTransfer";
-  inputTransfer.value = transferNumber || "";
-  inputTransfer.maxLength = 10;
-  transferCell.appendChild(inputTransfer);
-
-  // Create input for active
-  const inputActive = document.createElement("input");
-  inputActive.type = "text";
-  inputActive.id = "editActive";
-  inputActive.value = active || "";
-  inputActive.maxLength = 1;
-  activeCell.appendChild(inputActive);
-
-  // Create Update button
-  const btnUpdate = document.createElement("button");
-  btnUpdate.className = "sidUpdate";
-  btnUpdate.textContent = "Update";
-  btnUpdate.addEventListener("click", () => {
-    updateTransfer(accountNumber);
-  });
-
-  // Create Cancel button
-  const btnCancel = document.createElement("button");
-  btnCancel.className = "sidCancel";
-  btnCancel.textContent = "Cancel";
-  btnCancel.addEventListener("click", () => {
-    cancelEdit(transferNumber, accountNumber, active);
-  });
-
-  actionCell.appendChild(btnUpdate);
-  actionCell.appendChild(btnCancel);
+  document.getElementById("transferCell").innerHTML =
+    `<input type="text" id="editTransfer" value="${escapeHtml(transferNumber)}" maxlength="10"/>`;
+  document.getElementById("activeCell").innerHTML =
+    `<input type="text" id="editActive" value="${escapeHtml(active)}" maxlength="1"/>`;
+  document.getElementById("actionCell").innerHTML =
+    `<button class="sidUpdate" onclick="updateTransfer('${accountNumber}')">Update</button>
+     <button class="sidCancel" onclick="cancelEdit('${transferNumber}', '${accountNumber}', '${active}')">Cancel</button>`;
 }
 
-// 4. Cancel edit, restore original values
-function cancelEdit(originalTransfer, accountNumber, originalActive) {
-  const transferCell = document.getElementById("transferCell");
-  const activeCell = document.getElementById("activeCell");
-  const actionCell = document.getElementById("actionCell");
-
-  transferCell.textContent = "";
-  const spanTransfer = document.createElement("span");
-  spanTransfer.id = "transferValue";
-  spanTransfer.textContent = originalTransfer || "";
-  transferCell.appendChild(spanTransfer);
-
-  activeCell.textContent = "";
-  const spanActive = document.createElement("span");
-  spanActive.id = "activeValue";
-  spanActive.textContent = originalActive || "";
-  activeCell.appendChild(spanActive);
-
-  actionCell.textContent = "";
-  const btnEdit = document.createElement("button");
-  btnEdit.className = "sid";
-  btnEdit.textContent = "Edit";
-  btnEdit.addEventListener("click", () => {
-    enableEdit(originalTransfer, accountNumber, originalActive);
-  });
-  actionCell.appendChild(btnEdit);
+function cancelEdit(originalValue, accountNumber, activeValue) {
+  document.getElementById("transferCell").innerHTML = `<span id="transferValue">${escapeHtml(originalValue)}</span>`;
+  document.getElementById("activeCell").innerHTML = `<span id="activeValue">${escapeHtml(activeValue)}</span>`;
+  document.getElementById("actionCell").innerHTML =
+    `<button class="sid" onclick="enableEdit('${originalValue}', '${accountNumber}', '${activeValue}')">Edit</button>`;
 }
 
-// 5. Update transfer number and active status
 function updateTransfer(accountNumber) {
   const newTransferNumber = document.getElementById("editTransfer").value.trim();
-  const newActive = document.getElementById("editActive").value.trim();
+  const newActive = document.getElementById("editActive").value.trim().toUpperCase();
 
   if (!newTransferNumber || !newActive) {
     showFailureAlert("Fields cannot be empty.");
@@ -235,8 +132,8 @@ function updateTransfer(accountNumber) {
     return;
   }
 
-  if (!/^[YN]$/i.test(newActive)) {
-    showFailureAlert("Please enter only 'Y' or 'N' for Active.");
+  if (!/^[YN]$/.test(newActive)) {
+    showFailureAlert("Please enter only 'Y' or 'N' for Active status.");
     return;
   }
 
@@ -254,15 +151,12 @@ function updateTransfer(accountNumber) {
   })
     .then(res => res.json())
     .then(response => {
-      console.log("response:", response);
-
       if (response.failure) {
         showFailureAlert("Error updating Transfer Number.");
         return;
-      } else {
-        searchAccount1(); // Refresh data
-        showSuccessAlert("Transfer Number updated successfully.");
       }
+      showSuccessAlert("Fields updated successfully.");
+      searchAccount1(); // Refresh data
     })
     .catch(err => {
       console.error(err);
@@ -270,43 +164,36 @@ function updateTransfer(accountNumber) {
     });
 }
 
-// 6. Clear upload form and messages
 function clearUpload1() {
   const fileInput = document.getElementById("excelFile");
   fileInput.value = "";
-  document.getElementById("response").textContent = "";
-  document.getElementById("errorResponse").textContent = "";
+  document.getElementById("response").innerText = "";
+  document.getElementById("errorResponse").innerText = "";
 }
 
-// 7. Download failure details if present
 function downloadFailureDetailsIfPresent(responseData) {
   const failureDetails = responseData.failureDetails;
 
-  if (failureDetails && Array.isArray(failureDetails) && failureDetails.length > 0) {
-    const content = failureDetails.join("\n");
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  if (Array.isArray(failureDetails) && failureDetails.length > 0) {
+    const content = failureDetails.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "upload_failures.txt";
+    a.download = 'upload_failures.txt';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
     URL.revokeObjectURL(url);
   }
 }
 
-// 8. Show success alert
 function showSuccessAlert(message) {
   const alertBox = document.getElementById("successAlert");
   document.getElementById("alertMessage").textContent = message;
   alertBox.style.display = "block";
-
-  setTimeout(() => {
-    closeAlert();
-  }, 5000);
+  setTimeout(() => closeAlert(), 5000);
 }
 
 function closeAlert() {
@@ -314,18 +201,27 @@ function closeAlert() {
   alertBox.style.display = "none";
 }
 
-// 9. Show failure alert
 function showFailureAlert(message) {
   const alertBox = document.getElementById("failureAlert");
   document.getElementById("failureMessage").textContent = message;
   alertBox.style.display = "block";
-
-  setTimeout(() => {
-    closeFailureAlert();
-  }, 5000);
+  setTimeout(() => closeFailureAlert(), 5000);
 }
 
 function closeFailureAlert() {
   const alertBox = document.getElementById("failureAlert");
   alertBox.style.display = "none";
+}
+
+// Escape HTML to prevent injection
+function escapeHtml(text) {
+  return text?.replace(/[&<>"']/g, function (match) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;"
+    }[match];
+  }) || "";
 }
