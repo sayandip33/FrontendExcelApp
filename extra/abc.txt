@@ -151,3 +151,53 @@ function searchAccount1() {
       showFailureAlert("Something went wrong during search. Please try again.");
     });
 }
+
+
+
+
+function enableEdit(transferNumber, accountNumber, active) {
+  const transferCell = document.getElementById("transferCell");
+  const activeCell = document.getElementById("activeCell");
+  const actionCell = document.getElementById("actionCell");
+
+  // Clear existing content
+  transferCell.textContent = "";
+  activeCell.textContent = "";
+  actionCell.textContent = "";
+
+  // Create input for transferNumber
+  const inputTransfer = document.createElement("input");
+  inputTransfer.type = "text";
+  inputTransfer.id = "editTransfer";
+  inputTransfer.value = transferNumber || "";
+  inputTransfer.maxLength = 10;
+  transferCell.appendChild(inputTransfer);
+
+  // Create input for active
+  const inputActive = document.createElement("input");
+  inputActive.type = "text";
+  inputActive.id = "editActive";
+  inputActive.value = active || "";
+  inputActive.maxLength = 1;
+  activeCell.appendChild(inputActive);
+
+  // Create Update button
+  const btnUpdate = document.createElement("button");
+  btnUpdate.className = "sidUpdate";
+  btnUpdate.textContent = "Update";
+  btnUpdate.addEventListener("click", () => {
+    updateTransfer(accountNumber);
+  });
+
+  // Create Cancel button
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "sidCancel";
+  btnCancel.textContent = "Cancel";
+  btnCancel.addEventListener("click", () => {
+    cancelEdit(transferNumber, accountNumber, active);
+  });
+
+  // Append buttons to actionCell
+  actionCell.appendChild(btnUpdate);
+  actionCell.appendChild(btnCancel);
+}
