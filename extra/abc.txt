@@ -16,3 +16,19 @@ function escapeHTML(str) {
 element.innerHTML = `<div>${escapeHTML(userInput)}</div>`; // Safer than raw insertion
 
 
+❌ Before (Vulnerable):
+
+tbody.innerHTML = `<tr><td colspan='9' class="sidError">${data.msg}</td></tr>`;
+
+
+
+✅ After (Escaped):
+
+const row = document.createElement("tr");
+const cell = document.createElement("td");
+cell.colSpan = 9;
+cell.className = "sidError";
+cell.textContent = data.msg; // Safe: auto-escapes dangerous content
+row.appendChild(cell);
+tbody.innerHTML = ""; // clear previous content
+tbody.appendChild(row);
