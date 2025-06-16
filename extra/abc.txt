@@ -1,1 +1,104 @@
-empty
+function escapeHTML(str) {
+    // Contextual escaping for HTML body content
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;");
+}
+
+function validateAccountNumber(accountNumber) {
+    return /^\d{14}$/.test(accountNumber);
+}
+
+function searchAccount1() {
+    const acc = document.getElementById("searchAccount").value.trim();
+
+    if (!validateAccountNumber(acc)) {
+        showFailureAlert("Enter a valid 14-digit account number (numbers only).");
+        return;
+    }
+
+    const formData = new URLSearchParams();
+    formData.append("accountNumber", acc);
+
+    fetch("search", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            // Include a CSRF token if your server expects one
+            // "X-CSRF-Token": csrfToken
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById("resultBody");
+        tbody.innerHTML = "";
+
+        if (data && validateAccountNumber(data.accountNumber)) {
+            const row = document.createElement("tr");
+
+            const createEscapedCell = (value) => {
+                const td = document.createElement("td");
+                td.textContent = escapeHTML(String(value));
+                return td;
+            };
+
+            row.appendChild(createEscapedCell(data.accountNumber));
+
+            const activeCell = document.createElement("td");
+            activeCell.id = "activeCell";
+            const activeSpan = document.createElement("span");
+            activeSpan.id = "activeValue";
+            activeSpan.textContent = escapeHTML(data.active);
+            activeCell.appendChild(activeSpan);
+            row.appendChild(activeCell);
+
+            row.appendChild(createEscapedCell(data.appName));
+            row.appendChild(createEscapedCell(data.createdBy));
+            row.appendChild(createEscapedCell(data.createdTime));
+
+            const transferCell = document.createElement("td");
+            transferCell.id = "transferCell";
+            const transferSpan = document.createElement("span");
+            transferSpan.id = "transferValue";
+            transferSpan.textContent = escapeHTML(data.transferNumber);
+            transferCell.appendChild(transferSpan);
+            row.appendChild(transferCell);
+
+            row.appendChild(createEscapedCell(data.updatedBy));
+            row.appendChild(createEscapedCell(data.updatedTime));
+
+            const actionCell = document.createElement("td");
+            actionCell.id = "actionCell";
+            const editBtn = document.createElement("button");
+            editBtn.className = "sid";
+            editBtn.textContent = "Edit";
+
+            // Set attributes safely using data-* and separate JS logic
+            editBtn.dataset.transferNumber = data.transferNumber;
+            editBtn.dataset.accountNumber = data.accountNumber;
+            editBtn.dataset.active = data.active;
+
+            editBtn.addEventListener("click", function () {
+                const transfer = this.dataset.transferNumber;
+                const account = this.dataset.accountNumber;
+                const active = this.dataset.active;
+                enableEdit(transfer, account, active);
+            });
+
+            actionCell.appendChild(editBtn);
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        } else {
+            showFailureAlert(escapeHTML(data.msg || "Account not found."));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showFailureAlert("An error occurred while searching the account.");
+    });
+}
