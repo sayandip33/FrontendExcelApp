@@ -1,21 +1,4 @@
-let isPosting = false;
-    const btn = document.getElementById("postBtn");
-
-    btn.addEventListener("click", function () {
-      if (isPosting) return;
-
-      isPosting = true;
-      btn.disabled = true;
-
-      console.log("POST data:", {
-        message: "Hello from frontend!",
-        time: new Date().toISOString()
-      });
-
-      setTimeout(() => {
-        isPosting = false;
-        btn.disabled = false;
-      }, 2000); // simulate delay
-    });
-    
-removed abc
+<%@ taglib prefix="e" uri="https://www.owasp.org/index.php/OWASP_Java_Encoder_Project" %>
+<option value="${e:forHtmlAttribute(hostName)}">
+    ${e:forHtmlContent(hostName)}
+</option>
