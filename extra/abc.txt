@@ -22,3 +22,6 @@ public String appVersion(Model model) {
     return "appVersion"; // JSP or Thymeleaf page name
 }
 
+
+<h1>Running app version is: ${appVersion}</h1>
+
