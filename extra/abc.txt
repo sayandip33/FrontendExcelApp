@@ -5,36 +5,20 @@
 
 
 
-@GetMapping(value = "/appVersion.do", produces = "text/html")
-@ResponseBody
-public String appVersion() {
-    Log.info("Checking app version in POM file");
-    Properties prop = new Properties();
-    String appVersion = "";
-
+@GetMapping("/appVersion.do")
+public String appVersion(Model model) {
+    String version = "";
     try (InputStream ips = getClass()
-        .getResourceAsStream("/META-INF/maven/dcv.card/dcv-btsdebitcard/pom.properties")) {
-
+            .getResourceAsStream("/META-INF/maven/dcv.card/dcv-btsdebitcard/pom.properties")) {
         if (ips != null) {
+            Properties prop = new Properties();
             prop.load(ips);
-            appVersion = prop.getProperty("version");
-            Log.info("Running app version is ==> " + appVersion);
-            return "<h1>Running app version is : " + htmlEscape(appVersion) + "</h1>";
-        } else {
-            log.error("pom.properties file not found");
-            return "<h1>Running app version is currently unavailable!</h1>";
+            version = prop.getProperty("version");
         }
     } catch (Exception e) {
-        log.error("Some exception occurred ==> " + e.getMessage());
-        return "<h1>Running app version is currently unavailable!</h1>";
+        log.error("Error loading version", e);
     }
+    model.addAttribute("appVersion", version);
+    return "appVersion"; // JSP or Thymeleaf page name
 }
 
-private String htmlEscape(String input) {
-    return input == null ? "" : input
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&#39;");
-}
