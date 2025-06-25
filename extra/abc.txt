@@ -1,15 +1,62 @@
-@Configuration
-@PropertySource("classpath:DreyfusGama.properties")
-public class DreyfusGamaConfig {
+Here’s a sample **JIRA ticket** for migrating the `VXI-Dreyfusgama` application from **Struts 2** to **Spring Boot**:
 
-    @Value("${ivr.endpoint.url}")
-    private String endpointUrl;
+---
 
-    @Value("${ivr.retry.count}")
-    private int retryCount;
+### 🔖 **JIRA Ticket: SPRINGBOOT-MIGRATION-001**
 
-    @Value("${ivr.timeout.ms}")
-    private long timeout;
+**Title:**
+*Migrate VXI-Dreyfusgama Application from Struts 2 to Spring Boot*
 
-    // Getters or @PostConstruct for testing
-}
+---
+
+**Description:**
+The current `VXI-Dreyfusgama` application is built using **Struts 2**, which is outdated and presents maintainability, scalability, and security limitations. This ticket tracks the complete migration of the application to **Spring Boot**, leveraging modern frameworks and conventions for improved performance, testability, and developer experience.
+
+---
+
+**Objectives:**
+
+* Migrate Struts 2-based web layer to **Spring MVC (REST + Thymeleaf or REST + SPA)**
+* Replace Struts actions and XML-based configs with **Spring Boot annotations**
+* Replace XML dependency management (if using) with **Maven/Gradle auto-config**
+* Migrate `web.xml` and Struts filters to **Spring Boot auto-configuration**
+* Integrate **Spring Security** if applicable
+* Ensure compatibility with existing `.properties`, `.xml`, and resource files
+* Retain support for the following modules:
+
+  * `DreyfusGama.properties`, `Holidays.xml`, `OfficeHours.xml`, etc.
+  * Logging: migrate from Log4j to Log4j2 or Spring Boot logging
+  * Database access: ensure support for legacy JDBC or migrate to **Spring Data**
+* Deploy as **Spring Boot JAR** with embedded Tomcat
+* Build system compatibility with **JDK 17**
+
+---
+
+**Acceptance Criteria:**
+
+* [ ] All legacy Struts actions replaced with Spring Controllers
+* [ ] Application starts and runs as a Spring Boot app (`main()` entry)
+* [ ] No Struts 2 dependencies or configs remain
+* [ ] Resources (properties/xml) load correctly via Spring mechanisms
+* [ ] All critical endpoints tested and verified
+* [ ] Database access functions as expected
+* [ ] Logging, error handling, and security integrated and tested
+* [ ] Dockerfile and deployment pipeline updated if needed
+
+---
+
+**Labels:**
+`springboot`, `migration`, `struts2`, `legacy-modernization`
+
+**Epic/Parent:**
+*Application Modernization – VXI Platform*
+
+**Priority:**
+High
+
+**Assignee:**
+*TBD*
+
+---
+
+Let me know if you want this broken into **sub-tasks** (e.g., config migration, controller rewrite, testing, deployment update), or need the ticket exported in a specific format like CSV or Markdown.
