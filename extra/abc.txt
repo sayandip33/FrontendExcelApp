@@ -1,27 +1,63 @@
-<%@ taglib prefix="e" uri="https://www.owasp.org/index.php/OWASP_Java_Encoder_Project" %>
-<option value="${e:forHtmlAttribute(hostName)}">
-    ${e:forHtmlContent(hostName)}
-</option>
+@Configuration
+public class DataSourceConfig {
 
-
-
-@GetMapping("/appVersion.do")
-public String appVersion(Model model) {
-    String version = "";
-    try (InputStream ips = getClass()
-            .getResourceAsStream("/META-INF/maven/dcv.card/dcv-btsdebitcard/pom.properties")) {
-        if (ips != null) {
-            Properties prop = new Properties();
-            prop.load(ips);
-            version = prop.getProperty("version");
-        }
-    } catch (Exception e) {
-        log.error("Error loading version", e);
+    @Bean("jdbc/vx0ssDataJtds")
+    public ComboPooledDataSource vx0ssDataJtds() throws PropertyVetoException {
+        ComboPooledDataSource ds = new ComboPooledDataSource("IvrDBRef");
+        ds.setDriverClass(driver1);
+        ds.setJdbcUrl(url1);
+        ds.setUser(userName1);
+        ds.setPassword(password1);
+        applyCommonSettings(ds);
+        return ds;
     }
-    model.addAttribute("appVersion", version);
-    return "appVersion"; // JSP or Thymeleaf page name
+
+    @Bean("jdbc/vx0ssData")
+    public ComboPooledDataSource vx0ssData() throws PropertyVetoException {
+        ComboPooledDataSource ds = new ComboPooledDataSource("vx0ssData");
+        ds.setDriverClass(driver2);
+        ds.setJdbcUrl(url2);
+        ds.setUser(userName2);
+        ds.setPassword(password2);
+        applyCommonSettings(ds);
+        return ds;
+    }
+
+    @Bean("jdbc/vx0callhistoryData")
+    public ComboPooledDataSource vx0callhistoryData() throws PropertyVetoException {
+        ComboPooledDataSource ds = new ComboPooledDataSource("vx0callhistoryData");
+        ds.setDriverClass(driver3);
+        ds.setJdbcUrl(url3);
+        ds.setUser(userName3);
+        ds.setPassword(password3);
+        applyCommonSettings(ds);
+        return ds;
+    }
+
+    private void applyCommonSettings(ComboPooledDataSource ds) throws PropertyVetoException {
+        ds.setMinPoolSize(Integer.parseInt(CONN_POOL_MIN_SIZE));
+        ds.setMaxPoolSize(Integer.parseInt(CONN_POOL_MAX_SIZE));
+        ds.setMaxIdleTime(Integer.parseInt(CONN_POOL_IDLE_PERIOD));
+        ds.setMaxIdleTimeExcessConnections(Integer.parseInt(EXECESS_CONN_POOL_IDLE_PERIOD));
+        ds.setMaxStatements(Integer.parseInt(MAX_STATEMENTS));
+        ds.setAcquireIncrement(Integer.parseInt(INCREMENT_CONN_COUNT));
+    }
 }
 
 
-<h1>Running app version is: ${appVersion}</h1>
 
+
+@Component
+public class DataSourceFactory {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    public DataSource getDataSourceByName(String dataSourceName) {
+        try {
+            return (DataSource) applicationContext.getBean(dataSourceName);
+        } catch (BeansException ex) {
+            throw new IllegalArgumentException("Invalid dataSourceName: " + dataSourceName);
+        }
+    }
+}
