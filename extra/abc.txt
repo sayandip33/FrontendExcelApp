@@ -1,63 +1,15 @@
 @Configuration
-public class DataSourceConfig {
+@PropertySource("classpath:DreyfusGama.properties")
+public class DreyfusGamaConfig {
 
-    @Bean("jdbc/vx0ssDataJtds")
-    public ComboPooledDataSource vx0ssDataJtds() throws PropertyVetoException {
-        ComboPooledDataSource ds = new ComboPooledDataSource("IvrDBRef");
-        ds.setDriverClass(driver1);
-        ds.setJdbcUrl(url1);
-        ds.setUser(userName1);
-        ds.setPassword(password1);
-        applyCommonSettings(ds);
-        return ds;
-    }
+    @Value("${ivr.endpoint.url}")
+    private String endpointUrl;
 
-    @Bean("jdbc/vx0ssData")
-    public ComboPooledDataSource vx0ssData() throws PropertyVetoException {
-        ComboPooledDataSource ds = new ComboPooledDataSource("vx0ssData");
-        ds.setDriverClass(driver2);
-        ds.setJdbcUrl(url2);
-        ds.setUser(userName2);
-        ds.setPassword(password2);
-        applyCommonSettings(ds);
-        return ds;
-    }
+    @Value("${ivr.retry.count}")
+    private int retryCount;
 
-    @Bean("jdbc/vx0callhistoryData")
-    public ComboPooledDataSource vx0callhistoryData() throws PropertyVetoException {
-        ComboPooledDataSource ds = new ComboPooledDataSource("vx0callhistoryData");
-        ds.setDriverClass(driver3);
-        ds.setJdbcUrl(url3);
-        ds.setUser(userName3);
-        ds.setPassword(password3);
-        applyCommonSettings(ds);
-        return ds;
-    }
+    @Value("${ivr.timeout.ms}")
+    private long timeout;
 
-    private void applyCommonSettings(ComboPooledDataSource ds) throws PropertyVetoException {
-        ds.setMinPoolSize(Integer.parseInt(CONN_POOL_MIN_SIZE));
-        ds.setMaxPoolSize(Integer.parseInt(CONN_POOL_MAX_SIZE));
-        ds.setMaxIdleTime(Integer.parseInt(CONN_POOL_IDLE_PERIOD));
-        ds.setMaxIdleTimeExcessConnections(Integer.parseInt(EXECESS_CONN_POOL_IDLE_PERIOD));
-        ds.setMaxStatements(Integer.parseInt(MAX_STATEMENTS));
-        ds.setAcquireIncrement(Integer.parseInt(INCREMENT_CONN_COUNT));
-    }
-}
-
-
-
-
-@Component
-public class DataSourceFactory {
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    public DataSource getDataSourceByName(String dataSourceName) {
-        try {
-            return (DataSource) applicationContext.getBean(dataSourceName);
-        } catch (BeansException ex) {
-            throw new IllegalArgumentException("Invalid dataSourceName: " + dataSourceName);
-        }
-    }
+    // Getters or @PostConstruct for testing
 }
