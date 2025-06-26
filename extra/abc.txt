@@ -1,4 +1,1 @@
-<rule id="first_name">
-  <ruleref uri="http://gs1.bnymellon-ivrportal61.reco.tellme.com/Springboot_upgrade_05142024_QA"/>
-  <tag>out = rules.latest();</tag>
-</rule>
+<tag>out = input;</tag>
