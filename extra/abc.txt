@@ -1,33 +1,4 @@
-public static String sanitizeCRLF(String input) {
-    return input.replaceAll("[\\r\\n]", "");
-}
-
-try {
-    Properties props = System.getProperties();
-    Session session = Session.getInstance(props, null);
-    Transport tran = session.getTransport("smtp");
-    tran.connect(this.getMailServer(), "", "");
-
-    MimeMessage msg = new MimeMessage(session);
-    msg.setFrom(new InternetAddress(sanitizeCRLF(from)));
-
-    InternetAddress[] address = InternetAddress.parse(sanitizeCRLF(to), true);
-    msg.addRecipients(Message.RecipientType.TO, address);
-
-    msg.setSubject(sanitizeCRLF(subject));
-    msg.setContent(message, "text/html");
-    msg.setHeader("Mime-Version", "1.0");
-    msg.setHeader("Content-Transfer-Encoding", "quoted-printable");
-    msg.setHeader("X-Mailer", "sendhtml");
-    msg.setHeader("Content-Type", "text/html");
-    msg.setSentDate(new Date());
-
-    tran.sendMessage(msg, msg.getAllRecipients());
-    log(loc + "email sent. Subject: " + msg.getSubject());
-
-    tran.close();
-    msg = null;
-} catch (Exception e) {
-    logc(loc + "Exception was caught: " + e.getMessage());
-    e.printStackTrace(System.out);
-}
+<rule id="first_name">
+  <ruleref uri="http://gs1.bnymellon-ivrportal61.reco.tellme.com/Springboot_upgrade_05142024_QA"/>
+  <tag>out = rules.latest();</tag>
+</rule>
