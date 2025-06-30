@@ -1,5 +1,1 @@
- <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p [sessionId=%X{sessionId}] %c{1}:%L - %m%n"/>
- 
- ThreadContext.put("sessionId", session.getId());
- 
- ThreadContext.clearAll();
+java -Dexternal.config.location=file:/C:/data/dreyfusproperties.properties -jar dreyfusgama.war
