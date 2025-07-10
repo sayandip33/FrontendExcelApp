@@ -1,1 +1,64 @@
-vxml remove
+Here is a professional and visually polished version of your steps, ideal for documentation or sharing with colleagues. Each step includes a reference to an attached screenshot (excluding Step 1 as requested):
+
+---
+
+## **Veracode Static Scan Review & Rescan Process**
+
+**Project: BTS Debit Card VRU**
+
+---
+
+### **Step 1: Access Veracode**
+
+Navigate to the Veracode portal via the following link:
+🔗 [https://sfsso.bnymellon.net/veracode](https://sfsso.bnymellon.net/veracode)
+
+---
+
+### **Step 2: Locate the Application**
+
+From the Veracode dashboard, click on **“BTS Debit Card VRU”**.
+📸 *Refer to Screenshot – Step 2*
+
+---
+
+### **Step 3: Find the Latest Static Scan**
+
+You can locate the latest static scan in one of two ways:
+
+* Under the **Application Profile** section.
+* From the project labeled **“defendBot-dcv”**.
+
+Choose the most recent scan, preferably aligned with the latest release cut.
+📸 *Refer to Screenshot – Step 3*
+
+---
+
+### **Step 4: Select the Latest Release Cut**
+
+From the list of available scans, select the scan corresponding to the **latest release cut** of **defendbot**.
+📌 *In this example, it is the most recent post-release cut version.*
+📸 *Refer to Screenshot – Step 4*
+
+---
+
+### **Step 5: Open and Review the Module**
+
+Click **Open** to view the scan details.
+In the module view interface, click on **“Review Modules”** to proceed.
+📸 *Refer to Screenshot – Step 5*
+
+---
+
+### **Step 6: Modify Module & Rescan**
+
+Scroll down the module list and **uncheck** the entry for:
+
+> **spring-security-web.jar**
+
+After deselecting this module, initiate a **Rescan** to update the scan results.
+📸 *Refer to Screenshot – Step 6*
+
+---
+
+Let me know if you want this formatted in a Word document, PDF, or slide deck.
