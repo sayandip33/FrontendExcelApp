@@ -153,3 +153,16 @@ public class CaseController {
 <c:if test="${not empty profile and profile.businessHours}">
     <link dtmf="0" event="transfer"/>
 </c:if>
+
+
+<%@ page import="com.dreyfus.gama.ivr.dto.Profile" %>
+
+<%
+    Profile profile = (Profile) session.getAttribute("profile");
+    if (profile != null && profile.isBusinessHours() != null && profile.isBusinessHours()) {
+%>
+    <link dtmf="0" event="transfer"/>
+<%
+    }
+%>
+
