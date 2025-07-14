@@ -142,3 +142,14 @@ public class CaseController {
         return response;
     }
 }
+
+
+
+
+
+
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<c:if test="${not empty profile and profile.businessHours}">
+    <link dtmf="0" event="transfer"/>
+</c:if>
