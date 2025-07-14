@@ -1,8 +1,144 @@
-Call Farm Buero QA Number of RA
-Select that you have PIN 
-Login with Account Number and PIN 
-Hear Main Menu
-Hear about 1099 tax menu and select option 4 for 1099  
-Build VXML for 1400 page in Jira
-write dummy controller for APi call
- 
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1" xmlns="http://www.w3.org/2001/vxml">
+
+  <form id="TaxYearMenu">
+    <block>
+      <prompt>
+        For your 2023 1099 INT, press 1. 
+        For your 2024 1099 INT, press 2. 
+        For all other 1099 INT requests, press #.
+      </prompt>
+    </block>
+
+    <field name="taxYearChoice" type="digits?length=1">
+      <prompt> Please make your selection now. </prompt>
+      <grammar type="application/grammar+voicexml">
+        <![CDATA[
+          <grammar root="ROOT" mode="dtmf">
+            <rule id="ROOT">
+              <one-of>
+                <item>1</item>
+                <item>2</item>
+                <item>#</item>
+              </one-of>
+            </rule>
+          </grammar>
+        ]]>
+      </grammar>
+      
+      <filled>
+        <if cond="taxYearChoice == '1' || taxYearChoice == '2'">
+          <goto next="#ConfirmRequest"/>
+        <else/>
+          <goto next="#OtherRequest"/>
+        </if>
+      </filled>
+    </field>
+  </form>
+
+  <form id="ConfirmRequest">
+    <block>
+      <prompt>
+        You have requested to order a 1099 INT for the 
+        <value expr="taxYearChoice == '1' ? '2023' : '2024'"/> tax year to be mailed to the address of record. 
+        You should receive it in 5 to 7 business days.
+      </prompt>
+    </block>
+
+    <field name="confirmOption" type="digits?length=1">
+      <prompt>
+        To repeat this information, press 8.
+        To complete your request, press 1.
+        To return to the main menu, press 9.
+      </prompt>
+      <grammar type="application/grammar+voicexml">
+        <![CDATA[
+          <grammar root="ROOT" mode="dtmf">
+            <rule id="ROOT">
+              <one-of>
+                <item>1</item>
+                <item>8</item>
+                <item>9</item>
+              </one-of>
+            </rule>
+          </grammar>
+        ]]>
+      </grammar>
+
+      <filled>
+        <if cond="confirmOption == '1'">
+          <submit next="https://yourdomain.com/api/generate-case" method="post" namelist="taxYearChoice" enctype="application/x-www-form-urlencoded"/>
+        <elseif cond="confirmOption == '8'"/>
+          <goto next="#ConfirmRequest"/>
+        <else/>
+          <goto next="#TaxYearMenu"/>
+        </if>
+      </filled>
+    </field>
+  </form>
+
+  <form id="CaseConfirmation">
+    <var name="caseNumber" expr="application.caseNumber"/>
+    <block>
+      <prompt>
+        Thank you. The confirmation number for this order is 
+        <value expr="caseNumber"/>.
+        To repeat this information, press *.
+        To return to the main menu, press 9.
+        To speak to a Customer Service Representative, press #.
+      </prompt>
+    </block>
+
+    <field name="postConfirmOption" type="digits?length=1">
+      <grammar type="application/grammar+voicexml">
+        <![CDATA[
+          <grammar root="ROOT" mode="dtmf">
+            <rule id="ROOT">
+              <one-of>
+                <item>*</item>
+                <item>9</item>
+                <item>#</item>
+              </one-of>
+            </rule>
+          </grammar>
+        ]]>
+      </grammar>
+
+      <filled>
+        <if cond="postConfirmOption == '*'">
+          <goto next="#CaseConfirmation"/>
+        <elseif cond="postConfirmOption == '9'"/>
+          <goto next="#TaxYearMenu"/>
+        <else/>
+          <transfer dest="tel:+18001234567"/>
+        </if>
+      </filled>
+    </field>
+  </form>
+
+  <form id="OtherRequest">
+    <block>
+      <prompt>
+        For other 1099 INT requests, your request has been received. Please allow 5 to 7 business days.
+      </prompt>
+      <goto next="#TaxYearMenu"/>
+    </block>
+  </form>
+
+</vxml>
+
+
+
+
+@RestController
+@RequestMapping("/api")
+public class CaseController {
+
+    @PostMapping("/generate-case")
+    public Map<String, String> generateCase(@RequestParam String taxYearChoice) {
+        String caseNumber = UUID.randomUUID().toString().substring(0, 8).toUpperCase(); // Or any logic
+        Map<String, String> response = new HashMap<>();
+        response.put("caseNumber", caseNumber);
+        return response;
+    }
+}
