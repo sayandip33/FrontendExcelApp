@@ -1,9 +1,26 @@
-import org.springframework.core.io.ClassPathResource;
+<%
+    System.out.println("profile value in playchargesnot JSP : " + profile);
 
-ClassPathResource resource = new ClassPathResource("data/misc/Holidays.xml");
+    if (profile != null) {
+        int menuType = profile.getAccountActivityMenuType();
+        System.out.println("getAccountActivityMenuType: " + menuType);
 
-DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-// configure dbf as needed
-DocumentBuilder builder = dbf.newDocumentBuilder();
-
-Document doc = builder.parse(resource.getInputStream());
+        if (menuType == 0) {
+%>
+            <audio expr="audioUrl + 'NoMastercardChargesRecently.wav'">
+                <voice name="tom">
+                    No MasterCard debit card charges have been made recently.
+                </voice>
+            </audio>
+<%
+        } else if (menuType == 1) {
+%>
+            <audio expr="audioUrl + 'NoDebitMasterCardChargesRecently.wav'">
+                <voice name="tom">
+                    No debit MasterCard charges have been made recently.
+                </voice>
+            </audio>
+<%
+        }
+    }
+%>
