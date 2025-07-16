@@ -8,27 +8,110 @@
 
 <jsp:useBean id="mutualSSLDto" scope="session" class="com.dreyfus.gama.ivr.dto.MutualSs1DTO" />
 
+<form id="readfivechecks">
+  <block>
+    <var name="ctr" expr="0"/>
+    <assign name="currentMenu" expr="'readfivechecks'"/>
+    <%
+      List checks = (List) request.getAttribute("checks");
+      if (checks != null) {
+        for (int i = 0; i < checks.size(); i++) {
+          com.dreyfus.gama.ivr.dto.Transaction item = (com.dreyfus.gama.ivr.dto.Transaction) checks.get(i);
+          com.dreyfus.gama.ivr.dto.DreyfusDate chargeDateVar = item.getDate();
+          com.dreyfus.gama.ivr.dto.ASMoney amountVar = item.getAmount();
+          String checkNumberVar = item.getNumber();
+
+          String chargeDate = chargeDateVar.toString("MMddyyyy");
+          String yearPhrase = DataFormatter.formatYear(chargeDate, "year");
+          String decadePhrase = DataFormatter.formatYear(chargeDate, "decade");
+          String monthPhrase = DataFormatter.formatMonth(chargeDate);
+          String datePhrase = DataFormatter.formatDate(chargeDate);
+          String checkNumber = checkNumberVar;
+          String amount = amountVar.toString();
+          amount = DataFormatter.formatCurrency(amount);
+
+          if (i < 5) {
+    %>
+
+    <var name="date" expr="'<%=datePhrase%>'"/>
+    <var name="month" expr="'<%=monthPhrase%>'"/>
+    <var name="decade" expr="'<%=decadePhrase%>'"/>
+    <var name="year" expr="'<%=yearPhrase%>'"/>
+    <var name="checkNumber" expr="'<%=checkNumber%>'"/>
+    <var name="amount" expr="'<%=amount%>'"/>
+
+    <prompt bargein="true">
+      <voice name="tom">
+        <audio expr="audioUrl + 'CheckNumber.wav'">Check number</audio>
+      </voice>
+      <var name="checkValueArray" expr="createDataArray(checkNumber)"/>
+      <foreach item="number" array="checkValueArray">
+        <audio expr="standardAudioUrl + number + '.wav'">
+          <voice name="tom">
+            <value expr="number"/>
+          </voice>
+        </audio>
+      </foreach>
+
+      <voice name="tom">
+        <audio expr="audioUrl + 'InTheAmountOf.wav'">in the amount of</audio>
+      </voice>
+      <var name="amountArray" expr="createDataArrayByDelimiter(amount)"/>
+      <foreach item="number" array="amountArray">
+        <audio expr="standardAudioUrl + number + '.wav'">
+          <voice name="tom">
+            <value expr="number"/>
+          </voice>
+        </audio>
+      </foreach>
+
+      <voice name="tom">
+        <audio expr="audioUrl + 'ClearedOn.wav'">cleared on</audio>
+        <audio expr="standardAudioUrl + month + '.wav'"><value expr="month"/></audio>
+        <audio expr="standardAudioUrl + date + '.wav'"><value expr="date"/></audio>
+        <audio expr="standardAudioUrl + decade + '.wav'"><value expr="decade"/></audio>
+        <audio expr="standardAudioUrl + year + '.wav'"><value expr="year"/></audio>
+      </voice>
+      <break time="1.5s"/>
+    </prompt>
+
+    <%
+          } else {
+    %>
+    <goto next="#additionalchecks"/>
+    <%
+            break;
+          }
+        }
+      } else {
+    %>
+    <goto next="#noadditionalchecks"/>
+    <%
+      }
+    %>
+  </block>
+</form>
+
 <form id="nextfive">
   <block>
     <assign name="currentMenu" expr="'nextfive'"/>
     <var name="ctr" expr="0"/>
     <%
-      List charges = (List) request.getAttribute("charges");
-      if (charges != null) {
-        for (int i = 0; i < charges.size(); i++) {
-          com.dreyfus.gama.ivr.dto.Transaction item = (com.dreyfus.gama.ivr.dto.Transaction) charges.get(i);
+      List checks = (List) request.getAttribute("checks");
+      if (checks != null) {
+        for (int i = 0; i < checks.size(); i++) {
+          com.dreyfus.gama.ivr.dto.Transaction item = (com.dreyfus.gama.ivr.dto.Transaction) checks.get(i);
           com.dreyfus.gama.ivr.dto.DreyfusDate chargeDateVar1 = item.getDate();
           com.dreyfus.gama.ivr.dto.ASMoney amountVar1 = item.getAmount();
+          String checkNumberVar1 = item.getNumber();
 
           String chargeDate = chargeDateVar1.toString("MMddyyyy");
           String yearPhrase = DataFormatter.formatYear(chargeDate, "year");
           String decadePhrase = DataFormatter.formatYear(chargeDate, "decade");
           String monthPhrase = DataFormatter.formatMonth(chargeDate);
           String datePhrase = DataFormatter.formatDate(chargeDate);
-
-          String amountVal = amountVar1.toString();
+          String checkNumber = checkNumberVar1;
           String amount = amountVar1.toString();
-          amount = amount.replace("-", "");
           amount = DataFormatter.formatCurrency(amount);
 
           if (i > 4) {
@@ -38,17 +121,23 @@
     <var name="month" expr="'<%=monthPhrase%>'"/>
     <var name="decade" expr="'<%=decadePhrase%>'"/>
     <var name="year" expr="'<%=yearPhrase%>'"/>
+    <var name="checkNumber" expr="'<%=checkNumber%>'"/>
     <var name="amount" expr="'<%=amount%>'"/>
-    <var name="amountVal" expr="'<%=amountVal%>'"/>
-
-    <log>Amount: <value expr="amount"/></log>
 
     <prompt bargein="true">
-      <if cond="amountVal != null &amp;&amp; amountVal.slice(0,1) != '-' &amp;&amp; amountVal != '0.00'">
-        <audio expr="audioUrl + 'AChargeFor.wav'">A charge for</audio>
-      <else/>
-        <audio expr="audioUrl + 'ACreditFor.wav'">A credit for</audio>
-      </if>
+      <voice name="tom">
+        <audio expr="audioUrl + 'CheckNumber.wav'">Check number</audio>
+      </voice>
+      <var name="checkValueArray" expr="createDataArray(checkNumber)"/>
+      <foreach item="number" array="checkValueArray">
+        <audio expr="standardAudioUrl + number + '.wav'">
+          <value expr="number"/>
+        </audio>
+      </foreach>
+
+      <voice name="tom">
+        <audio expr="audioUrl + 'InTheAmountOf.wav'">in the amount of</audio>
+      </voice>
       <var name="amountArray" expr="createDataArrayByDelimiter(amount)"/>
       <foreach item="number" array="amountArray">
         <audio expr="standardAudioUrl + number + '.wav'">
@@ -57,8 +146,9 @@
           </voice>
         </audio>
       </foreach>
+
       <voice name="tom">
-        <audio expr="audioUrl + 'WasPostedOn.wav'">was posted on</audio>
+        <audio expr="audioUrl + 'ClearedOn.wav'">cleared on</audio>
         <audio expr="standardAudioUrl + month + '.wav'"><value expr="month"/></audio>
         <audio expr="standardAudioUrl + date + '.wav'"><value expr="date"/></audio>
         <audio expr="standardAudioUrl + decade + '.wav'"><value expr="decade"/></audio>
@@ -68,11 +158,11 @@
     </prompt>
 
     <%
-          } // end if i > 4
-        } // end for loop
-      } // end if charges != null
+          }
+        }
+      }
     %>
-    <goto next="#noadditionalcharges"/>
+    <goto next="#noadditionalchecks"/>
   </block>
 </form>
 
