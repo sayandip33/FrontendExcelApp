@@ -1,0 +1,38 @@
+
+**Subject:** Universal Spring Boot Migration – Version Conflict & Production Deployment
+
+Hi Ram,
+
+I wanted to provide an update regarding the Universal Spring Boot migration and a version conflict we encountered.
+
+In GitLab, we had version `0.0.36-SNAPSHOT` under the `o.o.14-SpringBootMigration` branch, which we used for UAT. For the production release, I created and deployed the `0.0.36` release version in the test environment. However, the application failed to start and threw the following error:
+
+
+com.microsoft.sqlserver.jdbc.SQLServerException: The "variant" data type is not supported.
+
+
+I then deployed the same `0.0.36` version in the QA environment and faced the same issue. To verify, I redeployed the older `0.0.36-SNAPSHOT` version in QA, and it worked without any issues. However, redeploying it in the test environment still resulted in the same error.
+
+We had encountered this issue earlier and identified that it was due to a version conflict in the `mssql-jdbc` dependency. To resolve this, we had explicitly added the following version:
+
+
+<dependency>
+    <groupId>com.microsoft.sqlserver</groupId>
+    <artifactId>mssql-jdbc</artifactId>
+    <version>9.2.1.jre8</version>
+    <scope>runtime</scope>
+</dependency>
+
+
+With this dependency, the application runs successfully using version `0.0.36.1-SNAPSHOT`.
+
+Although `0.0.36` is already mentioned in the RFC for Universal, I recommend that we proceed with deploying version `0.0.36.1` to production for today’s release to avoid the known issue.
+
+Please let me know if you have any questions or concerns.
+
+Best regards,
+\[Your Name]
+
+---
+
+Let me know if you'd like it formatted as an email or need help with a follow-up.
