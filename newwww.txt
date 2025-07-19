@@ -1,19 +1,2 @@
-Hi Elias,
-
-I have completed testing on the following retained assets:
-
-Retained Asset
-
-Dreyfusgama
-
-Universal
-
-MPS
-
-Phoadmin (UI App)
-
-All are loading successfully and displaying the welcome prompt as expected.
-
-Based on this, I can confirm that the base image update has been applied correctly and is functioning as intended. Everything appears to be working both internally and externally.
-
-We are good with the validation.
+Notes:
+The planned Database Tech Refresh scheduled for today was not completed due to unforeseen technical issues encountered during the DB copy process. As a result, we will continue using the existing database until further notice. A new date for the Tech Refresh will be communicated once the issues are resolved and a revised schedule is finalized.
