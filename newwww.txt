@@ -1,9 +1,11 @@
-I have completed validation steps in DCV production for the following clients: 1205, 1221, 1226, 1210, and others.
+Hi Baskar,
 
-    On making calls in the DCV prod environment, I consistently received the welcome prompt and initial menu.
+I hope you're doing well.
 
-    As I do not possess production card numbers, I was unable to proceed beyond the card details menu.
+We are currently using this ID in the Dryfusgama application, and we're in the process of migrating to Spring Boot. In order to avoid any potential database locking issues during the password change activity, we plan to scale down the application in the QA and Test environments.
 
-    The DCV-Dashboard UI application was also thoroughly validated, and it is functioning as expected.
+Could you please let us know your planned schedule for the password update? This will help us coordinate the scale-down accordingly and ensure minimal disruption.
 
-Based on these checks, I'm pleased to confirm that the recent changes are working correctly and everything looks good from our end.
+We'll temporarily pause development until the new password is generated and applied, and we'll resume once the update is complete.
+
+Thank you for your support.
