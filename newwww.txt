@@ -1,11 +1,31 @@
-Hi Baskar,
+import java.sql.*;
 
-I hope you're doing well.
+public class FundQueryExample {
+    // JDBC connection info
+    private static final String JDBC_URL = "jdbc:sqlserver://<HOST>:<PORT>;databaseName=CallHistoryBXP2";
+    private static final String JDBC_USER = "<USERNAME>";
+    private static final String JDBC_PASSWORD = "<PASSWORD>";
 
-We are currently using this ID in the Dryfusgama application, and we're in the process of migrating to Spring Boot. In order to avoid any potential database locking issues during the password change activity, we plan to scale down the application in the QA and Test environments.
+    public static void main(String[] args) {
+        String query = "SELECT TOP (1000) [FUND_CDE], [AS_OF_DTM], [SEVEN_DAY_YLD_AMT], [THIRTY_DAY_YLD_AMT], [ONE_DAY_YLD_AMT] FROM [dbo].[FUND]";
 
-Could you please let us know your planned schedule for the password update? This will help us coordinate the scale-down accordingly and ensure minimal disruption.
+        try (
+            Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery()
+        ) {
+            while (rs.next()) {
+                String fundCode = rs.getString("FUND_CDE");
+                Timestamp asOfDate = rs.getTimestamp("AS_OF_DTM");
+                BigDecimal sevenDayYld = rs.getBigDecimal("SEVEN_DAY_YLD_AMT");
+                BigDecimal thirtyDayYld = rs.getBigDecimal("THIRTY_DAY_YLD_AMT");
+                BigDecimal oneDayYld = rs.getBigDecimal("ONE_DAY_YLD_AMT");
 
-We'll temporarily pause development until the new password is generated and applied, and we'll resume once the update is complete.
-
-Thank you for your support.
+                System.out.printf("Fund: %s | As Of: %s | 7d Yield: %s | 30d Yield: %s | 1d Yield: %s%n",
+                    fundCode, asOfDate, sevenDayYld, thirtyDayYld, oneDayYld);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
