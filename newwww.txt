@@ -1,31 +1,4 @@
-import java.sql.*;
+log\.info\s*\(\s*(".*?")\s*\)
 
-public class FundQueryExample {
-    // JDBC connection info
-    private static final String JDBC_URL = "jdbc:sqlserver://<HOST>:<PORT>;databaseName=CallHistoryBXP2";
-    private static final String JDBC_USER = "<USERNAME>";
-    private static final String JDBC_PASSWORD = "<PASSWORD>";
 
-    public static void main(String[] args) {
-        String query = "SELECT TOP (1000) [FUND_CDE], [AS_OF_DTM], [SEVEN_DAY_YLD_AMT], [THIRTY_DAY_YLD_AMT], [ONE_DAY_YLD_AMT] FROM [dbo].[FUND]";
-
-        try (
-            Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
-            PreparedStatement stmt = conn.prepareStatement(query);
-            ResultSet rs = stmt.executeQuery()
-        ) {
-            while (rs.next()) {
-                String fundCode = rs.getString("FUND_CDE");
-                Timestamp asOfDate = rs.getTimestamp("AS_OF_DTM");
-                BigDecimal sevenDayYld = rs.getBigDecimal("SEVEN_DAY_YLD_AMT");
-                BigDecimal thirtyDayYld = rs.getBigDecimal("THIRTY_DAY_YLD_AMT");
-                BigDecimal oneDayYld = rs.getBigDecimal("ONE_DAY_YLD_AMT");
-
-                System.out.printf("Fund: %s | As Of: %s | 7d Yield: %s | 30d Yield: %s | 1d Yield: %s%n",
-                    fundCode, asOfDate, sevenDayYld, thirtyDayYld, oneDayYld);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}
+log.info(StringEscapeUtils.escapeJava(\1))
