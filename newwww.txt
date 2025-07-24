@@ -1,4 +1,5 @@
-log\.info\s*\(\s*(".*?")\s*\)
-
-
-log.info(StringEscapeUtils.escapeJava(\1))
+<%
+  import org.owasp.encoder.Encode;
+  String safeFundCode = Encode.forHtml(fundCode);
+%>
+<var name="fundCode" expr="'<%= safeFundCode %>'" />
