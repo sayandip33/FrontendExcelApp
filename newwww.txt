@@ -1,5 +1,1 @@
-<%
-  import org.owasp.encoder.Encode;
-  String safeFundCode = Encode.forHtml(fundCode);
-%>
-<var name="fundCode" expr="'<%= safeFundCode %>'" />
+<% if (profile != null && !"stifel".equalsIgnoreCase(profile.getClientNameVoiceClipNameText())) { %>
