@@ -1,0 +1,103 @@
+
+<%
+Profile profile = (Profile) session.getAttribute("profile");
+ArrayList deposits = (ArrayList) session.getAttribute("deposits");
+%>
+
+<vxml version="2.1" revision="4" 
+      application="<%=Encode.forHtmlAttribute(mutualSSLDto.getMutualSslUrl())%>/dreyfusgama/appSettings.jsp" 
+      xmlns="http://www.w3.org/2001/vxml">
+
+<var name="sourceOfRequest" expr="'readFiveDeposits'"/>
+
+<form id="readfivedeposits">
+    <block>
+        <assign name="currentMenu" expr="'readfivedeposits'"/>
+        <var name="ctr" expr="0"/>
+        
+        <% if (deposits != null) { %>
+            <log label="com.tellme.proprietary.dreyfusgama.lasttendeposits.task.success"/>
+            
+            <%
+            for (int i = 0; i < deposits.size(); i++) {
+                DepositsDTO item = (DepositsDTO) deposits.get(i);
+                DreyfusDate chargeDateVar = item.getDate();
+                ASMoney amountVar = item.getAmount();
+
+                String chargeDate = chargeDateVar.toString("MMddyyyy");
+                String yearPhrase = DataFormatter.formatYear(chargeDate, "year");
+                String decadePhrase = DataFormatter.formatYear(chargeDate, "decade");
+                String monthPhrase = DataFormatter.formatMonth(chargeDate);
+                String datePhrase = DataFormatter.formatDate(chargeDate);
+                String amount = amountVar.toString();
+                amount = DataFormatter.formatCurrency(amount);
+
+                if (i < 5) {
+            %>
+            
+            <var name="date" expr="'<%=datePhrase%>'"/>
+            <var name="month" expr="'<%=monthPhrase%>'"/>
+            <var name="decade" expr="'<%=decadePhrase%>'"/>
+            <var name="year" expr="'<%=yearPhrase%>'"/>
+            <var name="amount" expr="'<%=amount%>'"/>
+
+            <if cond="ctr &lt; 5">
+                <prompt bargein="true">
+                    <voice name="tom">
+                        <audio expr="audioUrl+'ADepositFor.wav'">
+                            A deposit for
+                        </audio>
+                    </voice>
+                    
+                    <var name="amountArray" expr="createDataArrayByDelimiter(amount)"/>
+                    <foreach item="number" array="amountArray">
+                        <audio expr="standardAudioUrl + number + '.wav'">
+                            <voice name="tom">
+                                <value expr="number"/>
+                            </voice>
+                        </audio>
+                    </foreach>
+
+                    <voice name="tom">
+                        <audio expr="audioUrl+'WasPostedOn.wav'">
+                            was posted on
+                        </audio>
+                        <audio expr="standardAudioUrl + month + '.wav'">
+                            <value expr="month"/>
+                        </audio>
+                        <audio expr="standardAudioUrl + date + '.wav'">
+                            <value expr="date"/>
+                        </audio>
+                        <audio expr="standardAudioUrl + decade + '.wav'">
+                            <value expr="decade"/>
+                        </audio>
+                        <audio expr="standardAudioUrl + year + '.wav'">
+                            <value expr="year"/>
+                        </audio>
+                    </voice>
+                    <break time="1s"/>
+                </prompt>
+                <elseif cond="ctr &gt; 4"/>
+                <goto next="#additionaldeposits"/>
+            </if>
+            <assign name="ctr" expr="ctr+1"/>
+            
+            <%
+                } else {
+            %>
+                    <goto next="#additionaldeposits"/>
+            <%
+                    break;
+                }
+            }
+            %>
+            <goto next="#noadditionaldeposits"/>
+        <% } else { %>
+            <goto next="#noadditionaldeposits"/>
+        <% } %>
+    </block>
+</form>
+
+
+
+
