@@ -1,0 +1,105 @@
+<form id="readfivechecks">
+    <block>
+        <var name="ctr" expr="0"/>
+        <assign name="currentMenu" expr="'readfivechecks'"/>
+        <%
+        ArrayList checks = (ArrayList) session.getAttribute("checks");
+        if (checks != null) {
+            for (int i = 0; i < checks.size(); i++) {
+                ChecksDTO item = (ChecksDTO) checks.get(i);
+                DreyfusDate chargeDateVar = item.getDate();
+                ASMoney amountVar = item.getAmount();
+                String checkNumberVar = item.getNumber();
+                String chargeDate = chargeDateVar.toString("MMddyyyy");
+                String yearPhrase = DataFormatter.formatYear(chargeDate, "year");
+                String decadePhrase = DataFormatter.formatYear(chargeDate, "decade");
+                String monthPhrase = DataFormatter.formatMonth(chargeDate);
+                String datePhrase = DataFormatter.formatDate(chargeDate);
+                String checkNumber = checkNumberVar;
+                String amount = amountVar.toString();
+                amount = DataFormatter.formatCurrency(amount);
+                
+                if (i < 5) {
+        %>
+        <var name="date" expr="'<%=datePhrase%>'"/>
+        <var name="month" expr="'<%=monthPhrase%>'"/>
+        <var name="decade" expr="'<%=decadePhrase%>'"/>
+        <var name="year" expr="'<%=yearPhrase%>'"/>
+        <var name="checkNumber" expr="'<%=checkNumber%>'"/>
+        <var name="amount" expr="'<%=amount%>'"/>
+        
+        <if cond="ctr &lt; 5">
+            <prompt bargein="true">
+                <voice name="tom">
+                    <audio expr="audioUrl+'CheckNumber.wav'">
+                        Check number
+                    </audio>
+                </voice>
+                
+                <var name="checkValueArray" expr="createDataArray(checkNumber)"/>
+                <foreach item="number" array="checkValueArray">
+                    <audio expr="standardAudioUrl + number + '.wav'">
+                        <voice name="tom">
+                            <value expr="number"/>
+                        </voice>
+                    </audio>
+                </foreach>
+                
+                <voice name="tom">
+                    <audio expr="audioUrl+'InTheAmountOf.wav'">
+                        in the amount of
+                    </audio>
+                </voice>
+                
+                <var name="amountArray" expr="createDataArrayByDelimiter(amount)"/>
+                <foreach item="number" array="amountArray">
+                    <audio expr="standardAudioUrl + number + '.wav'">
+                        <voice name="tom">
+                            <value expr="number"/>
+                        </voice>
+                    </audio>
+                </foreach>
+                
+                <voice name="tom">
+                    <audio expr="audioUrl+'ClearedOn.wav'">
+                        cleared on
+                    </audio>
+                    <audio expr="standardAudioUrl + month + '.wav'">
+                        <value expr="month"/>
+                    </audio>
+                    <audio expr="standardAudioUrl + date + '.wav'">
+                        <value expr="date"/>
+                    </audio>
+                    <audio expr="standardAudioUrl + decade + '.wav'">
+                        <value expr="decade"/>
+                    </audio>
+                    <audio expr="standardAudioUrl + year + '.wav'">
+                        <value expr="year"/>
+                    </audio>
+                </voice>
+                <break time="1.5s"/>
+            </prompt>
+            <elseif cond="ctr &gt; 4"/>
+            <goto next="#additionalchecks"/>
+        </if>
+        <assign name="ctr" expr="ctr+1"/>
+        
+        <%
+                } else {
+        %>
+                    <goto next="#additionalchecks"/>
+        <%
+                    break;
+                }
+            }
+        %>
+            <goto next="#noadditionalchecks"/>
+        <%
+        } else {
+        %>
+            <goto next="#noadditionalchecks"/>
+        <%
+        }
+        %>
+    </block>
+</form>
