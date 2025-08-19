@@ -2,9 +2,9 @@ package com.example.demoforSayan;
 import java.util.*;
 
 public class YearSplitter {
-    public static void main(String[] args) {
-        int year = 2155;
-
+    
+    // Method to split year and return as a string
+    public static String splitYear(int year) {
         List<Integer> parts = new ArrayList<>();
         int remaining = year;
 
@@ -27,12 +27,18 @@ public class YearSplitter {
             parts.add(remaining);
         }
 
-        // Print result
-        for (int i = 0; i < parts.size(); i++) {
-            System.out.print(parts.get(i));
-            if (i < parts.size() - 1) {
-                System.out.print(",");
-            }
-        }
+        // Join parts into a string
+        return String.join(",", parts.stream()
+                                     .map(String::valueOf)
+                                     .toArray(String[]::new));
+    }
+
+    public static void main(String[] args) {
+        // Test cases
+        System.out.println(splitYear(2025));  // 2000,25
+        System.out.println(splitYear(2024));  // 2000,24
+        System.out.println(splitYear(1098));  // 1000,98
+        System.out.println(splitYear(1998));  // 1000,900,98
+        System.out.println(splitYear(2155));  // 2000,100,55
     }
 }
