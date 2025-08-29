@@ -1,12 +1,24 @@
-Incident Note – Liquibase CI/CD Pipeline Failure for DCV Application
+In **Oracle SQL Developer**, there’s no direct `DROP TABLE IF EXISTS` like in MySQL.
+Instead, you need to check if the table exists, and drop it safely.
 
-Incident ID: INC12348750
-Impacted User: Rama Rao Palacherla
+Here’s a rollback-friendly way:
 
-During the implementation of the Liquibase database CI/CD pipeline for the DCV application, the pipeline failed because Illumio blocked the request to the DCV production database servers:
+```sql
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE employee_liquibase_for_prod_testing CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -942 THEN  -- ORA-00942: table or view does not exist
+         RAISE;
+      END IF;
+END;
+/
+```
 
-RT14A10270PV00.BNYMELLON.NET (TPC)
+### Explanation:
 
-RC14A10346PV00.BNYMELLON.NET (CNJ)
+* `CASCADE CONSTRAINTS` ensures dependent constraints (like foreign keys) are also dropped.
+* `SQLCODE = -942` is the Oracle error when a table doesn’t exist → we ignore that.
+* This way, the script won’t fail if the table is already gone.
 
-We attempted to retrieve the blocked source IP using the Illumio self-service dashboard, but the mnemonic DCV is under audit control and cannot be checked through the platform. Support from Illumio Production Services is required to provide the blocked source IP (failure occurred on 2025-08-22 22:50:18).
+👉 Do you want me to also show you how this would look inside a **Liquibase rollback block** (XML/YAML/SQL format), so you can plug it in directly?
