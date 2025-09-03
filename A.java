@@ -1,24 +1,9 @@
-In **Oracle SQL Developer**, there’s no direct `DROP TABLE IF EXISTS` like in MySQL.
-Instead, you need to check if the table exists, and drop it safely.
+Subject: Scheduled Password Rotation Activity for ef0m23m ID – Lower Region
 
-Here’s a rollback-friendly way:
+Dear Team,
 
-```sql
-BEGIN
-   EXECUTE IMMEDIATE 'DROP TABLE employee_liquibase_for_prod_testing CASCADE CONSTRAINTS';
-EXCEPTION
-   WHEN OTHERS THEN
-      IF SQLCODE != -942 THEN  -- ORA-00942: table or view does not exist
-         RAISE;
-      END IF;
-END;
-/
-```
+Please be informed that the VXI-AutocustPrivicy application will experience a short downtime in the QA and Test environments due to a scheduled password rotation activity for the DB2 database associated with the ef0m23m ID.
 
-### Explanation:
+The activity is expected to last only a few minutes. We will notify you as soon as the rotation is completed and the application is available again.
 
-* `CASCADE CONSTRAINTS` ensures dependent constraints (like foreign keys) are also dropped.
-* `SQLCODE = -942` is the Oracle error when a table doesn’t exist → we ignore that.
-* This way, the script won’t fail if the table is already gone.
-
-👉 Do you want me to also show you how this would look inside a **Liquibase rollback block** (XML/YAML/SQL format), so you can plug it in directly?
+Thank you for your understanding.
