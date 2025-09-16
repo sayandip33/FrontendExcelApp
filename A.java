@@ -1,68 +1,18 @@
-DELETE FROM ivruser.fraud_db_allHostname
-WHERE hostname = 'test-host.example.com';
+Subject: Password Rotation Activity – Autocust Privacy App (19th Sept, 8:30 AM IST)
 
+Dear Team,
 
-INSERT INTO ivruser.fraud_db_allHostname (hostname)
-VALUES ('test-host.example.com');
+We have a scheduled password rotation activity on 19th September at 8:30 AM IST.
 
+As part of this activity:
 
-Got it 👍
-Based on your table **`ivruser.fraud_db_report_status`** (columns: `REPORT_DATE DATE, FILENAME VARCHAR2(100), FILEWRITE_STATUS CHAR(1), REPORT_CREATED_DATE DATE`), here are examples for **INSERT, UPDATE, and DELETE** queries:
+The Autocust Privacy application in Production needs to be scaled down prior to the start of the activity.
 
----
+Once the new password is received, I will update the properties file.
 
-### 🔹 **INSERT**
+After that, the team will need to scale up the Autocust Privacy application in Production.
 
-```sql
-INSERT INTO ivruser.fraud_db_report_status
-    (report_date, filename, filewrite_status, report_created_date)
-VALUES
-    (TO_DATE('09/04/2025','MM/DD/YYYY'),
-     'fraud_report_sep04.csv',
-     'Y',
-     SYSDATE);
-```
+If an Incident or RFC needs to be created to track this activity, please proceed at the earliest, as we have only two days remaining.
+You may refer to RFC3456267 for guidance and reference.
 
-* `TO_DATE` used for explicit date insertion.
-* `'Y'` is just an example status (since `CHAR(1)` usually stores flags like Y/N).
-* `SYSDATE` inserts the current system date/time.
-
----
-
-### 🔹 **UPDATE**
-
-```sql
-UPDATE ivruser.fraud_db_report_status
-SET filewrite_status = 'N',
-    report_created_date = SYSDATE
-WHERE filename = 'fraud_report_sep04.csv';
-```
-
-* Updates one row by matching `filename`.
-* You can also filter using `report_date` or any unique condition.
-
----
-
-### 🔹 **DELETE**
-
-```sql
-DELETE FROM ivruser.fraud_db_report_status
-WHERE filename = 'fraud_report_sep04.csv';
-```
-
-* Removes the row based on `filename`.
-* If multiple rows exist with the same `filename`, they will all be deleted.
-
----
-
-⚠️ If you want to **delete only one row even if duplicates exist**, you can do:
-
-```sql
-DELETE FROM ivruser.fraud_db_report_status
-WHERE filename = 'fraud_report_sep04.csv'
-  AND ROWNUM = 1;
-```
-
----
-
-Do you want me to also create a **MERGE (upsert) query** so you can insert if not exists, or update if exists?
+Kindly confirm once the necessary preparations are in place.
