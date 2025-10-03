@@ -1,20 +1,23 @@
-Got it 👍 — if we strip out `SqIDatabase.properties` from each filename, the application names are:
+-- Update only voice_segment
+UPDATE ivruser.message_segments
+SET voice_segment = 'IBTS/1543.wav'
+WHERE client_id = '1232' AND msg_id = 'ENTER_EXP_DATE';
 
-* demandNotes
-* autoCustPrivacy
-* autoattendant
-* achOrigin
-* achControlTotals
-* universal
-* tfnmsportal
-* retainedAssets
-* phodashboard
-* pershingInternalHD
-* nsa
-* mpsFunds Transfer
-* ivrSurvey
-* dreyfusgama
-* bnymHD
-* helpdeskadmin
+UPDATE ivruser.message_segments
+SET voice_segment = 'IBTS/1542.wav'
+WHERE client_id = '1232' AND msg_id = 'EXP_DATE_MSG';
 
-Do you want me to also normalize them (e.g., remove spaces like in **"mpsFunds Transfer" → "mpsFundsTransfer"**) so you get clean identifiers?
+COMMIT;
+
+
+
+-- Rollback to previous voice_segment values
+UPDATE ivruser.message_segments
+SET voice_segment = 'IBTS/1143.wav'
+WHERE client_id = '1232' AND msg_id = 'ENTER_EXP_DATE';
+
+UPDATE ivruser.message_segments
+SET voice_segment = 'IBTS/1121.wav'
+WHERE client_id = '1232' AND msg_id = 'EXP_DATE_MSG';
+
+COMMIT;
