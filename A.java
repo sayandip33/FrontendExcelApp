@@ -32,10 +32,14 @@ public SecurityFilterChain configure(HttpSecurity http) throws Exception {
             logout.addLogoutHandler(pingFederateLogoutHandler());
         })
 
-        // ✅ FIXED SECTION — Add HttpOnly to the CSRF cookie
+        // ✅ FIXED SECTION — Using new cookie customizer API
         .csrf(csrf -> {
             CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
-            csrfTokenRepository.setCookieHttpOnly(true); // Enforce HttpOnly flag
+            csrfTokenRepository.setCookieCustomizer(cookie -> cookie
+                .httpOnly(true)     // add HttpOnly flag
+                .secure(true)       // ensure Secure flag
+                .path("/helpdeskadminportal") // optional: set consistent path
+            );
             csrf.csrfTokenRepository(csrfTokenRepository);
             csrf.ignoringRequestMatchers("/logout", "/logout.do");
         })
