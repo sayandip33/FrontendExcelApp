@@ -1,8 +1,24 @@
-Hi Ram,
+Subject: Support Required for Tech Refresh DB Servers Activity – 7th Nov 2025 @ 7:00 PM EST (RFC1283450)
 
-To fix the identified vulnerability, we need to upgrade the Spring Boot version to 3.5.7, which includes the latest Tomcat (10.1.48).
+Dear Team,
 
-It would be great if @Lima Rodrigo or @Mello Heitor could include this Spring Boot upgrade (to 3.5.7) along with your existing vulnerability fixes.
-Otherwise, I’ll have to create a separate branch for this change, which may lead to unnecessary complexity.
+As part of IVRADV-496 – VXI Tech Refresh DB Servers in Production Environment, we have an upcoming activity scheduled for 7th November 2025 at 7:00 PM EST.
 
-I’ll handle the DCV Dashboard updates on my end.
+Activity Details:
+
+Update the DB URL in the SMS2 locker properties file.
+
+Support Team to perform application scale-down and scale-up in the production region for all VXI applications, except Dreyfus Gama, as that will be deployed separately via the pipeline.
+
+Additional Notes:
+
+Please ensure someone is available at 7:00 PM EST on the mentioned date to support this activity.
+
+Kindly keep the App Engine scale-up and scale-down commands ready beforehand to ensure smooth execution during the change window.
+
+RFC Reference: RFC1283450
+
+Please acknowledge your availability and confirm readiness for the activity.
+
+
+Support Required for VXI Prod DB Tech Refresh Activity – 7th Nov 2025, 7:00 PM EST
