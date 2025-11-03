@@ -1,24 +1,8 @@
-Subject: Support Required for Tech Refresh DB Servers Activity – 7th Nov 2025 @ 7:00 PM EST (RFC1283450)
+Hi Shari,
 
-Dear Team,
+I wanted to let you know that I’ll be on leave from 25th November to 5th December for my wedding. 😊
+I would be delighted if you could join us to celebrate the wedding on 25th November.
 
-As part of IVRADV-496 – VXI Tech Refresh DB Servers in Production Environment, we have an upcoming activity scheduled for 7th November 2025 at 7:00 PM EST.
+During my absence, Mazahar will be available to provide any necessary support. I’ll resume work on 8th December.
 
-Activity Details:
-
-Update the DB URL in the SMS2 locker properties file.
-
-Support Team to perform application scale-down and scale-up in the production region for all VXI applications, except Dreyfus Gama, as that will be deployed separately via the pipeline.
-
-Additional Notes:
-
-Please ensure someone is available at 7:00 PM EST on the mentioned date to support this activity.
-
-Kindly keep the App Engine scale-up and scale-down commands ready beforehand to ensure smooth execution during the change window.
-
-RFC Reference: RFC1283450
-
-Please acknowledge your availability and confirm readiness for the activity.
-
-
-Support Required for VXI Prod DB Tech Refresh Activity – 7th Nov 2025, 7:00 PM EST
+Thanks so much for your understanding and support!
