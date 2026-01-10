@@ -1,28 +1,34 @@
-<%
-HttpSession session = request.getSession();
-String httpSessionId = session.getId();
-%>
+Hello Everyone,
 
-<vxml version="2.1">
+The deployment for the Helpdesk Admin Portal has been completed successfully.
 
-  <var name="httpSessionId" expr="'<%= httpSessionId %>'"/>
+Regarding PershingHD, Option 9 is functioning as expected with the following behavior:
 
-  <form>
-    <block>
+Option 9 is enabled/disabled correctly from the admin portal.
 
-      <log> mapped dnis is <value expr="mappedDnis"/></log>
-      <log> call path code is <value expr="callPathCode"/></log>
-      <log> client code is <value expr="clientCode"/></log>
-      <log> client desc is <value expr="clientDesc"/></log>
-      <log> Management company ID is <value expr="mgmtCmpyId"/></log>
+It remains a hidden option, as specified in the project documentation.
 
-      <!-- ✅ SESSION ID LOG (MATCHING STYLE) -->
-      <log> HTTP Session ID is <value expr="httpSessionId"/></log>
+When Option 9 is enabled, pressing 9 transfers the call as configured.
 
-      <!-- OPTIONAL FALLBACK -->
-      <log> Session ID (fallback) is <value expr="session.connection.callid"/></log>
+When Option 9 is disabled, pressing 9 routes the call to No Match.
 
-    </block>
-  </form>
+As per the project document, Option 9 is not announced in the IVR menu but is available as a hidden option (Greenfield).
 
-</vxml>
+I have attached a screenshot from the project document for reference.
+
+Below is the IVR menu as outlined in the project documentation:
+
+Welcome to The Pershing Employee Technology Service Centre.
+To report a critical business or client impacting issue, press 1.
+For password resets and account lockouts, press 2. 
+For print-related issues, press 3. 
+For video conferencing support, press 4. 
+For VDS support, also known as Virtual Desktop Service, press 5. 
+For the NetX and TeleXchange Service Desk, press 6. 
+For status updates on existing tickets, press 7. 
+For all other IT issues and service requests, press 8. 
+Hidden Option 9 (Greenfield)
+
+If there are any concerns or if anything does not align with expectations, we can discuss it with our team and provide an update.
+
+Please let us know if further clarification is required.
