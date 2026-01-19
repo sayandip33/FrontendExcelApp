@@ -1,9 +1,6 @@
-<form id="askPinForm">
-<block>
-<log>changePin.jsp: Inside askPin form ... </log>
-<log><value expr="pageName"/> BEGIN</log>
-<assign name="noinputNomatchCount" expr="0" />
-<log><value expr="pageName"/> pinMinLength=<value expr="'${BROKER_MINLENGTH}'"/></log>
-<log><value expr="pageName"/> pinMaxLength=<value expr="'${BROKER_MAXLENGTH}'"/></log>
-<log><value expr="pageName"/> pinLength=<value expr="'${BROKER_LENGTH}'"/></log>
-</block>
+UPDATE IVRUSER.MESSAGE_SEGMENTS
+SET VOICE_SEGMENT = 'IBTS/1001.wav'
+WHERE CLIENT_ID = 1207
+  AND MSG_ID = 'CONFIRM_PIN_NOT_MATCH'
+  AND VOICE_SEGMENT = 'IBTS/1549.wav'
+  AND VOICE_ORDER = 1;
