@@ -1,32 +1,15 @@
-<!-- Source: https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core -->
+<!-- Source: https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
 <dependency>
-    <groupId>org.apache.tomcat.embed</groupId>
-    <artifactId>tomcat-embed-core</artifactId>
-    <version>10.1.57</version>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-core</artifactId>
+    <version>2.26.1</version>
     <scope>compile</scope>
 </dependency>
 
-
-<!-- Source: https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-jasper -->
+<!-- Source: https://mvnrepository.com/artifact/com.mchange/mchange-commons-java -->
 <dependency>
-    <groupId>org.apache.tomcat.embed</groupId>
-    <artifactId>tomcat-embed-jasper</artifactId>
-    <version>10.1.57</version>
-    <scope>compile</scope>
-</dependency>
-
-<!-- Source: https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-websocket -->
-<dependency>
-    <groupId>org.apache.tomcat</groupId>
-    <artifactId>tomcat-websocket</artifactId>
-    <version>10.1.57</version>
-    <scope>compile</scope>
-</dependency>
-
-<!-- Source: https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-el -->
-<dependency>
-    <groupId>org.apache.tomcat.embed</groupId>
-    <artifactId>tomcat-embed-el</artifactId>
-    <version>10.1.57</version>
+    <groupId>com.mchange</groupId>
+    <artifactId>mchange-commons-java</artifactId>
+    <version>0.6.1</version>
     <scope>compile</scope>
 </dependency>
