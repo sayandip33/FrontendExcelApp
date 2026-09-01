@@ -1,0 +1,1811 @@
+Absolutely. For this kind of migration, you should **not ask Devin to simply “document the code.”** The prompt should make it behave like a **senior solution architect + reverse engineer + business analyst + database analyst + migration consultant**.
+
+The goal should be:
+
+> **A new developer should be able to understand, maintain, reproduce, and migrate the DCV-Debitcard application without asking the existing developers any questions.**
+
+Below is a ready-to-copy prompt for Devin Desktop. I have included several areas that are commonly missed: hidden configuration, tenant differences, DB-driven behavior, VXML call navigation, audio mapping, error/retry behavior, external API contracts, triggers, tokenization, deployment, security, sequence diagrams, and a **gap/uncertainty register** so Devin does not hallucinate.
+
+You can save/copy this as a `.txt` file.
+
+# ROLE
+
+You are acting as a combination of:
+
+* Principal Software Architect
+* Senior Java / Spring Boot Architect
+* Senior IVR / Voice Application Architect
+* VXML Expert
+* Oracle Database Architect
+* Reverse Engineering Specialist
+* Enterprise Application Documentation Specialist
+* Business Analyst
+* Integration Architect
+* AI Call Flow Migration Architect
+* Security and Production Support Engineer
+
+Your task is to perform a COMPLETE reverse engineering and documentation of the application provided to you.
+
+The application name is:
+
+DCV-Debitcard
+
+The final documentation must be so complete and accurate that:
+
+> A completely new development team, who has never spoken to the original developers, should be able to understand how the application works, maintain it, troubleshoot it, reproduce its behavior, and migrate it to a new Google AI-based call flow platform using ONLY the generated documentation, source code, configuration, and database metadata/data that can be extracted.
+
+Do NOT produce a superficial code summary.
+
+Do NOT simply describe folders and classes.
+
+You must trace the REAL runtime behavior of the application.
+
+The documentation should explain:
+
+* What happens when a customer calls
+* How the call enters the system
+* How the tenant/client is identified
+* Which VXML or Java component executes first
+* How call flow navigation works
+* Which database queries are executed
+* How prompts/audio are selected
+* How tenant-specific logic changes the flow
+* How external APIs are called
+* How tokenization works
+* How FDR integration works
+* How errors and retries are handled
+* How the application determines the next step
+* How the call finally terminates
+* How the same reusable code supports more than 20 different clients
+
+The documentation must be evidence-based.
+
+Never invent behavior.
+
+If something cannot be confirmed from the source code, configuration, database schema, logs, or available artifacts, clearly mark it as:
+
+NOT CONFIRMED
+
+and explain:
+
+* What is missing
+* Why it cannot be confirmed
+* Which file, database query, configuration, log, or SME input would confirm it
+
+Do not guess.
+
+======================================================================
+
+1. APPLICATION CONTEXT
+   ======================================================================
+
+Application Name:
+DCV-Debitcard
+
+Technology characteristics known initially:
+
+* Java
+* Spring Boot
+* VXML / VoiceXML
+* IVR application
+* Oracle Database
+* Multi-tenant architecture
+* More than 20 clients/tenants
+* Example tenant/client IDs include:
+
+1200
+1201
+1205
+1230
+1225
+1229
+
+There may be many more tenants.
+
+The same codebase is reused across multiple tenants.
+
+Different tenants may have:
+
+* Different call flows
+* Different menu options
+* Different business rules
+* Different audio prompts
+* Different database configurations
+* Different API configurations
+* Different validation rules
+* Different retry behavior
+* Different card/product behavior
+* Different routing or termination behavior
+
+Audio files are present inside the codebase.
+
+The actual audio file names or audio selections may come from the database.
+
+The application also involves, based on currently available information:
+
+* Oracle Database
+* FDR API / FDR integration
+* Database triggers
+* Tokenization
+* External APIs
+* IVR call/session handling
+* Tenant-specific configuration
+* Shared/reusable Java code
+* Shared/reusable VXML components
+
+There may be additional integrations, frameworks, services, jobs, schedulers, servers, configuration systems, authentication mechanisms, certificates, queues, caches, logs, or deployment components.
+
+You must discover these from the application.
+
+======================================================================
+2. PRIMARY OBJECTIVE
+====================
+
+Create a COMPLETE "As-Is Application Documentation Pack".
+
+This documentation pack will be used as the primary source of truth for a future migration of DCV-Debitcard from the current VXML/IVR architecture to a Google AI-based conversational call flow architecture.
+
+The final documentation should support all of the following teams:
+
+1. New Java Developers
+2. IVR Developers
+3. Database Developers
+4. Solution Architects
+5. Google AI / Conversational AI Developers
+6. QA Engineers
+7. Production Support Engineers
+8. DevOps Engineers
+9. Security Reviewers
+10. Business Analysts
+
+The documentation should explain BOTH:
+
+A. Technical behavior
+B. Business/call-flow behavior
+
+Do not assume that the future team understands VXML, IVR architecture, FDR, tokenization, Oracle triggers, or the existing project conventions.
+
+======================================================================
+3. IMPORTANT WORKING RULES
+==========================
+
+You must follow these rules throughout the analysis.
+
+RULE 1:
+Do not hallucinate.
+
+RULE 2:
+Every important statement should be traceable back to one or more of:
+
+* Source file
+* Class
+* Method
+* VXML file
+* Configuration file
+* SQL query
+* Database table
+* Stored procedure
+* Trigger
+* API definition
+* Log
+* Build/deployment file
+* Test
+* Actual database data provided by the user
+
+RULE 3:
+For important findings, provide evidence references.
+
+Example:
+
+Source:
+src/main/java/.../DebitCardService.java
+
+Method:
+validateCard()
+
+Relevant logic:
+...
+
+RULE 4:
+Separate facts into these categories:
+
+CONFIRMED FROM SOURCE CODE
+
+CONFIRMED FROM DATABASE
+
+CONFIRMED FROM CONFIGURATION
+
+INFERRED FROM CODE FLOW
+
+NOT CONFIRMED
+
+ASSUMPTION REQUIRING VALIDATION
+
+RULE 5:
+If a database-dependent behavior cannot be understood because actual data is missing, generate the exact SQL query required to retrieve that data.
+
+Do not fabricate database results.
+
+RULE 6:
+When you need database data from me, create a clearly organized SQL file containing all required queries.
+
+I will execute the queries manually against the Oracle database and provide the output back to you.
+
+After I provide the database output, continue the analysis and update the documentation.
+
+RULE 7:
+Do not stop at static code analysis.
+
+Perform logical call-flow tracing.
+
+Trace:
+
+Call Entry
+->
+Tenant Identification
+->
+Initial VXML/Controller/Handler
+->
+Database Lookup
+->
+Prompt Selection
+->
+User Input
+->
+Validation
+->
+Business Service
+->
+External API
+->
+Response Processing
+->
+Next State
+->
+Next VXML/Prompt/Menu
+->
+Termination or Transfer
+
+RULE 8:
+Analyze the entire repository before concluding.
+
+Do not generate the final documentation until you have inspected:
+
+* Java source
+* VXML files
+* Configuration files
+* Build files
+* SQL files
+* Database access code
+* Integration code
+* Audio resources
+* Scripts
+* Deployment files
+* Docker files if present
+* Server configuration if present
+* Logging configuration
+* Test code
+* CI/CD files if present
+* API specifications if present
+* Documentation already present in the repository
+
+======================================================================
+4. ANALYSIS PROCESS
+===================
+
+Perform the work in phases.
+
+Do not jump directly to the final documentation.
+
+Create intermediate artifacts.
+
+PHASE 1 - REPOSITORY INVENTORY
+
+Analyze the complete repository.
+
+Create:
+
+01_REPOSITORY_INVENTORY.html
+
+Document:
+
+* Repository root structure
+* Major modules
+* Important directories
+* Java source locations
+* VXML locations
+* Resource directories
+* Audio directories
+* Configuration directories
+* SQL directories
+* Deployment scripts
+* Build files
+* Maven/Gradle modules
+* Docker files
+* Kubernetes files if present
+* Jenkins/GitHub/GitLab pipeline files if present
+* Shell scripts
+* Properties/YAML/XML configuration
+* Logging configuration
+* Certificate/keystore references
+* Environment-specific files
+
+Create a categorized file inventory.
+
+Do NOT document every trivial file individually.
+
+Identify the files that are important for runtime behavior.
+
+PHASE 2 - TECHNOLOGY AND ARCHITECTURE DISCOVERY
+
+Create:
+
+02_SYSTEM_ARCHITECTURE.html
+
+Identify:
+
+* Application runtime architecture
+* Frameworks
+* Java version
+* Spring Boot version
+* Application server/container
+* VXML runtime/platform dependencies
+* Oracle connectivity
+* Connection pooling
+* HTTP clients
+* REST/SOAP integrations
+* Tokenization mechanisms
+* FDR integration
+* Authentication/security
+* Caching
+* Messaging
+* Schedulers
+* Async processing
+* Logging
+* Monitoring
+* Error handling
+* Session management
+* Deployment architecture
+
+Create architecture diagrams.
+
+At minimum create:
+
+1. High-Level System Architecture
+2. Application Component Architecture
+3. IVR Request Processing Architecture
+4. Database Interaction Architecture
+5. External Integration Architecture
+6. Multi-Tenant Architecture
+7. Deployment Architecture, if discoverable
+
+Use Mermaid diagrams where possible so the diagrams can be maintained.
+
+PHASE 3 - APPLICATION ENTRY POINT ANALYSIS
+
+Create:
+
+03_APPLICATION_ENTRY_POINTS.html
+
+Identify every possible application entry point.
+
+Examples to investigate:
+
+* Spring Boot main class
+* Controllers
+* Servlets
+* VXML entry files
+* Call entry URLs
+* IVR gateway entry configuration
+* Filters
+* Interceptors
+* Exception handlers
+* Startup listeners
+* Scheduled jobs
+
+For every entry point document:
+
+* File path
+* Class/file name
+* Method/form/block
+* Trigger mechanism
+* Input received
+* Important parameters
+* Output
+* Next component called
+
+Create an entry-point-to-call-flow diagram.
+
+PHASE 4 - COMPLETE CALL FLOW REVERSE ENGINEERING
+
+This is one of the most important phases.
+
+Create:
+
+04_COMPLETE_CALL_FLOW_DOCUMENTATION.html
+
+Reverse engineer ALL call flows.
+
+Do not only identify files.
+
+Trace actual navigation.
+
+For every call flow document:
+
+* Flow ID/name
+* Purpose
+* Entry point
+* Applicable tenant(s)
+* Preconditions
+* Input parameters
+* Session variables
+* Database reads
+* Database writes
+* APIs called
+* Audio prompts played
+* User input expected
+* Validation logic
+* Retry logic
+* Timeout logic
+* No-input behavior
+* No-match behavior
+* Error behavior
+* Branching conditions
+* Next state
+* Exit conditions
+* Transfer behavior if any
+* Disconnect behavior if any
+
+For every VXML file/form/menu/block:
+
+Document:
+
+* Purpose
+* How it is reached
+* Input variables
+* Variables created or modified
+* Prompts played
+* Grammar/input expected
+* Filled blocks
+* Goto/submit/return transitions
+* Catch handlers
+* No-input
+* No-match
+* Error handling
+* Next VXML destination
+
+Create flow diagrams for every major flow.
+
+Create one master flow map showing how all flows connect.
+
+If the application dynamically selects VXML or call flow from the database, configuration, tenant, or request parameter, identify the exact mechanism.
+
+PHASE 5 - MULTI-TENANT ARCHITECTURE ANALYSIS
+
+Create:
+
+05_MULTI_TENANT_ARCHITECTURE.html
+
+This is a critical document.
+
+Identify exactly how the application determines the tenant/client.
+
+Investigate:
+
+* URL parameters
+* ANI/DNIS
+* Request parameters
+* Session variables
+* Database lookups
+* Configuration files
+* Headers
+* IVR platform metadata
+* Client IDs
+* Tenant IDs
+* Environment variables
+
+Determine whether tenant behavior is implemented through:
+
+* Database configuration
+* Java if/else logic
+* Switch/case
+* Strategy pattern
+* Factory pattern
+* Properties
+* VXML branching
+* Dynamic file names
+* Dynamic SQL
+* Stored procedures
+* API configuration
+* Audio mapping
+
+Create a TENANT MATRIX.
+
+Example structure:
+
+| Tenant ID | Entry Flow | Main Call Flow | DB Configuration | Audio Source | API Differences | Special Rules | VXML Differences |
+| --------- | ---------- | -------------- | ---------------- | ------------ | --------------- | ------------- | ---------------- |
+
+Do not assume all tenants have the same flow.
+
+Identify:
+
+* Shared behavior
+* Tenant-specific behavior
+* Tenant-specific code
+* Tenant-specific database rows/configuration
+* Tenant-specific audio
+* Tenant-specific APIs
+* Tenant-specific validation
+
+Also create:
+
+SHARED COMPONENT VS TENANT-SPECIFIC COMPONENT MATRIX
+
+PHASE 6 - DATABASE REVERSE ENGINEERING
+
+Create:
+
+06_DATABASE_ARCHITECTURE.html
+
+Analyze all database access.
+
+Search for:
+
+* SQL queries
+* JDBC
+* JPA
+* Hibernate
+* Stored procedures
+* Functions
+* Packages
+* Triggers
+* Dynamic SQL
+* Query builder code
+* Repository classes
+* DAO classes
+* XML SQL mappings
+
+For every table discovered document:
+
+* Table name
+* Purpose
+* How it is used
+* Read/write operations
+* Important columns
+* Primary key
+* Foreign keys if known
+* Tenant-related columns
+* Sensitive columns
+* Important indexes if available
+* Related tables
+* Classes/services using the table
+* Call flow where the table is involved
+
+Create an ER diagram where enough information is available.
+
+Create a table usage matrix.
+
+Example:
+
+| Table | SELECT | INSERT | UPDATE | DELETE | Stored Procedure | Trigger | Used By |
+| ----- | ------ | ------ | ------ | ------ | ---------------- | ------- | ------- |
+
+For every SQL query found in code document:
+
+* Source file
+* Method
+* SQL purpose
+* Input parameters
+* Output fields
+* Tables involved
+* Call flow impact
+
+Also identify:
+
+* SQL injection risks
+* Dynamic SQL
+* Missing tenant filters
+* Cross-tenant data risk
+* Transaction boundaries
+* Commit/rollback behavior
+* Connection management
+
+PHASE 7 - DATABASE DATA COLLECTION REQUIREMENTS
+
+Create:
+
+07_REQUIRED_DATABASE_QUERIES.sql
+
+This file is extremely important.
+
+Since you do not have direct access to production database data, identify the exact data required to understand runtime behavior.
+
+Generate safe READ-ONLY Oracle SQL queries.
+
+Do not generate INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, or any destructive SQL.
+
+Organize the SQL file into sections.
+
+For example:
+
+---
+
+## SECTION 1 - DATABASE METADATA
+
+Tables
+
+Columns
+
+Primary Keys
+
+Foreign Keys
+
+Indexes
+
+Triggers
+
+Views
+
+Sequences
+
+Synonyms
+
+Packages
+
+Procedures
+
+Functions
+
+---
+
+## SECTION 2 - TENANT CONFIGURATION
+
+Queries required to retrieve:
+
+* All tenant/client IDs
+* Tenant configuration
+* Tenant-specific call flow configuration
+* Tenant-specific audio configuration
+* Tenant-specific API configuration
+* Tenant-specific feature flags
+* Tenant-specific routing
+
+---
+
+## SECTION 3 - CALL FLOW CONFIGURATION
+
+Queries required to retrieve:
+
+* Flow definitions
+* Menu definitions
+* Next-state mappings
+* Prompt mappings
+* Retry configurations
+* Error configurations
+* Dynamic routing configuration
+
+---
+
+## SECTION 4 - AUDIO/PROMPT MAPPING
+
+Queries required to retrieve:
+
+* Audio file names
+* Prompt IDs
+* Prompt descriptions
+* Tenant mappings
+* Language mappings
+* Call flow mappings
+
+---
+
+## SECTION 5 - FDR / EXTERNAL API CONFIGURATION
+
+Only retrieve non-secret configuration metadata.
+
+DO NOT retrieve passwords, tokens, private keys, secret values, or sensitive credentials.
+
+Retrieve only:
+
+* API identifiers
+* Endpoint aliases if safe
+* Service mappings
+* Request types
+* Tenant mappings
+* Timeout/retry configuration
+
+---
+
+## SECTION 6 - TOKENIZATION CONFIGURATION
+
+Retrieve only non-sensitive metadata required to understand:
+
+* Where tokenization occurs
+* Which fields are tokenized
+* Token reference formats
+* Tokenization flow/configuration
+
+Do not retrieve actual sensitive card data.
+
+---
+
+## SECTION 7 - TRIGGERS AND PROCEDURES
+
+Generate queries to retrieve:
+
+* Trigger source
+* Procedure source
+* Function source
+* Package specification
+* Package body
+
+---
+
+## SECTION 8 - REFERENCE / CONFIGURATION DATA
+
+Generate SELECT queries for all tables whose actual rows are necessary to reconstruct runtime behavior.
+
+For every SQL query add a comment explaining:
+
+* Why the data is required
+* Which documentation section depends on it
+* Whether sensitive data may be returned
+* Any WHERE clause that should be adjusted by the DBA
+
+Prefer limiting very large data queries using:
+
+* Tenant IDs
+* Relevant configuration keys
+* Relevant date ranges
+* ROWNUM/FETCH FIRST where appropriate
+
+But do not limit configuration data in a way that hides important tenant differences.
+
+PHASE 8 - DATABASE TRIGGER AND PROCEDURE ANALYSIS
+
+Create:
+
+08_DATABASE_LOGIC_TRIGGERS_PROCEDURES.html
+
+Analyze all:
+
+* Triggers
+* Stored procedures
+* Functions
+* Packages
+* Views
+
+For each one document:
+
+* Name
+* Object type
+* Purpose
+* Triggering event
+* Input
+* Output
+* Tables affected
+* Business impact
+* Tenant impact
+* Call flow impact
+* Hidden side effects
+* Error handling
+
+This section is critical because future developers must not miss database-side business logic.
+
+PHASE 9 - AUDIO AND PROMPT ARCHITECTURE
+
+Create:
+
+09_AUDIO_PROMPT_ARCHITECTURE.html
+
+Analyze the complete audio system.
+
+Identify:
+
+* Audio directories
+* File formats
+* Naming conventions
+* Static audio references
+* Dynamic audio references
+* Database-driven audio file names
+* Tenant-specific audio
+* Language-specific audio
+* Missing audio handling
+* Fallback behavior
+
+Create an AUDIO INVENTORY.
+
+Example:
+
+| Audio File | Referenced From | DB Mapping | Tenant | Flow | Purpose |
+| ---------- | --------------- | ---------- | ------ | ---- | ------- |
+
+Also create:
+
+PROMPT TO CALL FLOW MAPPING.
+
+Determine whether the prompt is:
+
+* Hardcoded
+* Dynamically generated
+* Database-driven
+* Tenant-driven
+* Language-driven
+* API-response-driven
+
+PHASE 10 - EXTERNAL API AND FDR INTEGRATION
+
+Create:
+
+10_EXTERNAL_API_AND_FDR_INTEGRATION.html
+
+Identify ALL external systems.
+
+For every integration document:
+
+* Integration name
+* Purpose
+* Where it is called
+* Java class/method
+* Tenant applicability
+* Endpoint configuration source
+* Authentication mechanism
+* Request construction
+* Request fields
+* Sensitive fields
+* Tokenization before request
+* Response fields
+* Success handling
+* Failure handling
+* Timeout
+* Retry
+* Circuit breaker if any
+* Logging behavior
+* Exception mapping
+
+For FDR specifically, create a detailed integration flow.
+
+Include:
+
+Caller
+->
+Application
+->
+Request Preparation
+->
+Tokenization if applicable
+->
+FDR API
+->
+Response
+->
+Database update if applicable
+->
+Next IVR state
+
+Document actual request/response models from source code where available.
+
+Do not expose secrets.
+
+Mask examples of sensitive values.
+
+PHASE 11 - TOKENIZATION AND SECURITY FLOW
+
+Create:
+
+11_TOKENIZATION_AND_SECURITY_ARCHITECTURE.html
+
+Identify:
+
+* What data is sensitive
+* PAN/card number handling
+* CVV handling if applicable
+* Account number handling
+* Tokenization process
+* Detokenization process if any
+* Encryption
+* Hashing
+* Masking
+* Logging protection
+* Secret handling
+* Certificates
+* Keystores
+* TLS configuration
+* Authentication
+* Authorization
+
+Create a DATA FLOW diagram for sensitive data.
+
+Classify data:
+
+PUBLIC
+INTERNAL
+CONFIDENTIAL
+SENSITIVE
+PCI/SENSITIVE PAYMENT DATA if applicable
+
+Document where sensitive data:
+
+* Enters the application
+* Exists in memory
+* Is logged
+* Is sent externally
+* Is stored
+* Is tokenized
+* Is masked
+* Is removed
+
+PHASE 12 - JAVA APPLICATION ARCHITECTURE
+
+Create:
+
+12_JAVA_CODE_ARCHITECTURE.html
+
+Document:
+
+* Main application classes
+* Controllers
+* Services
+* DAOs/repositories
+* Utility classes
+* DTOs/models
+* Configuration classes
+* Filters
+* Interceptors
+* Exception handlers
+* Factories
+* Strategy implementations
+* Tenant-specific classes
+* Shared reusable components
+
+Create a component dependency diagram.
+
+For important classes document:
+
+Class:
+Responsibility:
+Key methods:
+Called by:
+Calls:
+Database interactions:
+External API interactions:
+Tenant-specific behavior:
+Important risks/assumptions:
+
+PHASE 13 - CONFIGURATION AND ENVIRONMENT DOCUMENTATION
+
+Create:
+
+13_CONFIGURATION_AND_ENVIRONMENT.html
+
+Analyze all:
+
+* application.properties
+* application.yml
+* Environment-specific properties
+* XML config
+* System properties
+* Environment variables
+* JVM arguments
+* Server configuration
+* Database configuration
+* API configuration
+* Feature flags
+* Tenant configuration
+
+Create a configuration matrix.
+
+Example:
+
+| Configuration Key | Purpose | Used By | Environment | Tenant Specific | Sensitive |
+| ----------------- | ------- | ------- | ----------- | --------------- | --------- |
+
+Never expose actual passwords or secrets.
+
+Replace sensitive values with:
+
+REDACTED
+
+PHASE 14 - ERROR HANDLING AND RECOVERY
+
+Create:
+
+14_ERROR_HANDLING_AND_RECOVERY.html
+
+Analyze:
+
+* Java exceptions
+* VXML catch blocks
+* No-input
+* No-match
+* Timeout
+* API failure
+* Database failure
+* Invalid customer input
+* Tokenization failure
+* FDR failure
+* Audio missing
+* Invalid tenant
+* Session expiration
+* Retry limits
+
+For every important failure scenario document:
+
+Trigger
+->
+Detection
+->
+Retry
+->
+Fallback
+->
+Logging
+->
+User Prompt
+->
+Next Flow
+->
+Termination
+
+Create an error matrix.
+
+PHASE 15 - SESSION, STATE, AND VARIABLE DOCUMENTATION
+
+Create:
+
+15_SESSION_STATE_AND_VARIABLES.html
+
+Identify all stateful variables.
+
+Document:
+
+* VXML variables
+* Session variables
+* Java session variables
+* Request attributes
+* Database-backed state
+* Tenant context
+* Call ID
+* ANI/DNIS
+* Card/account identifiers
+* Token references
+
+For every important variable document:
+
+Variable Name
+Type
+Created Where
+Modified Where
+Used Where
+Lifetime
+Sensitive
+Tenant-Specific
+
+Create a STATE TRANSITION diagram for the IVR.
+
+PHASE 16 - END-TO-END SEQUENCE DIAGRAMS
+
+Create:
+
+16_END_TO_END_SEQUENCE_DIAGRAMS.html
+
+Create detailed Mermaid sequence diagrams for at least:
+
+1. Normal successful call
+2. Tenant identification
+3. Menu navigation
+4. Card validation flow
+5. FDR API call
+6. Tokenization flow
+7. Database failure
+8. API failure
+9. No-input/no-match retry
+10. Call termination
+
+Where tenant behavior differs, create separate diagrams.
+
+PHASE 17 - BUSINESS RULE CATALOG
+
+Create:
+
+17_BUSINESS_RULE_CATALOG.html
+
+Extract business rules from:
+
+* Java code
+* VXML
+* SQL
+* Triggers
+* Stored procedures
+* Configuration
+* Tenant-specific logic
+
+Each rule should have:
+
+Rule ID
+Description
+Source
+Tenant applicability
+Input
+Condition
+Action
+Output
+Exceptions
+
+Example:
+
+BR-001
+
+If retry count exceeds configured limit, terminate the current call flow.
+
+Source:
+VXML file / Java method / DB configuration
+
+Tenant:
+All / specific tenant
+
+PHASE 18 - COMPLETE DATA FLOW DOCUMENTATION
+
+Create:
+
+18_DATA_FLOW_DOCUMENTATION.html
+
+Trace important data from source to destination.
+
+Examples:
+
+ANI
+DNIS
+Tenant ID
+Card number
+Token
+Customer ID
+Call ID
+Authentication data
+FDR response
+Audio file name
+
+For each:
+
+Source
+->
+Transformation
+->
+Validation
+->
+Storage
+->
+External API
+->
+Next Component
+
+PHASE 19 - DEPLOYMENT AND OPERATIONS
+
+Create:
+
+19_DEPLOYMENT_AND_OPERATIONS.html
+
+Document:
+
+* Build process
+* Maven/Gradle commands
+* Artifact generated
+* Runtime dependencies
+* Application startup
+* Required environment variables
+* Required properties
+* Oracle dependencies
+* External services
+* Certificates
+* Ports
+* Context paths
+* Health checks
+* Logging locations
+* Log formats
+* Monitoring
+* Restart procedure
+* Failure recovery
+
+If actual deployment infrastructure is not present in the repository, mark clearly:
+
+NOT CONFIRMED FROM SOURCE REPOSITORY
+
+and list exactly what information is required.
+
+PHASE 20 - OBSERVABILITY AND TROUBLESHOOTING
+
+Create:
+
+20_TROUBLESHOOTING_AND_SUPPORT_GUIDE.html
+
+Create practical troubleshooting documentation.
+
+Include:
+
+Problem:
+Possible cause:
+How to investigate:
+Relevant logs:
+Relevant classes:
+Relevant database tables:
+Relevant SQL query:
+Expected result:
+Recovery action:
+
+Include scenarios such as:
+
+* Call not entering application
+* Wrong tenant selected
+* Audio not playing
+* Audio file missing
+* Invalid VXML navigation
+* Database connection failure
+* FDR API failure
+* Tokenization failure
+* Retry loop
+* Session issue
+* Wrong menu
+* Wrong tenant configuration
+* Trigger side effect
+* External API timeout
+
+PHASE 21 - TEST COVERAGE AND TEST CASE EXTRACTION
+
+Create:
+
+21_TEST_SCENARIOS_AND_TEST_CASES.html
+
+Extract existing tests.
+
+Then create missing test scenarios.
+
+Cover:
+
+* Every major call flow
+* Every tenant
+* Happy path
+* Negative path
+* No-input
+* No-match
+* Timeout
+* Database failure
+* API failure
+* Invalid tenant
+* Invalid input
+* Tokenization failure
+* FDR failure
+
+Create a test matrix.
+
+Example:
+
+| Test ID | Tenant | Flow | Input | Expected Behavior | DB Impact | API Impact |
+| ------- | ------ | ---- | ----- | ----------------- | --------- | ---------- |
+
+PHASE 22 - GOOGLE AI MIGRATION MAPPING
+
+Create:
+
+22_GOOGLE_AI_MIGRATION_MAPPING.html
+
+Do NOT redesign the application without evidence.
+
+First document the existing behavior.
+
+Then create a mapping from current architecture to a Google AI conversational architecture.
+
+For every existing VXML concept identify its likely conceptual equivalent.
+
+Example:
+
+Current IVR Component
+->
+Purpose
+->
+State/Data
+->
+Suggested AI Call Flow Representation
+
+Possible concepts to evaluate:
+
+* Intent
+* Parameter
+* Entity
+* Session parameter
+* Page/flow/state
+* Webhook
+* Fulfillment
+* Prompt/response
+* Barge-in
+* No-input handling
+* No-match handling
+* Escalation
+* Transfer
+* Context/session state
+
+Do not assume a specific Google product unless supported by the migration requirement or user later confirms the target platform.
+
+Clearly separate:
+
+CURRENT CONFIRMED IMPLEMENTATION
+
+from
+
+PROPOSED MIGRATION MODEL
+
+Create:
+
+CURRENT FLOW
+->
+MIGRATION COMPONENT
+->
+MIGRATION RISK
+->
+VALIDATION REQUIRED
+
+PHASE 23 - MIGRATION GAP AND RISK ANALYSIS
+
+Create:
+
+23_MIGRATION_GAP_AND_RISK_ANALYSIS.html
+
+Identify:
+
+* Hidden database logic
+* Hardcoded tenant logic
+* Dynamic VXML navigation
+* Dynamic SQL
+* Database-driven prompts
+* Missing configuration documentation
+* Undocumented APIs
+* Security risks
+* Sensitive data flows
+* Tight coupling
+* Shared state
+* External dependencies
+* Production-only behavior
+* Missing test coverage
+
+Assign:
+
+Risk ID
+Description
+Severity
+Impact
+Affected tenants
+Evidence
+Recommended action
+
+PHASE 24 - UNKNOWN / SME QUESTION REGISTER
+
+Create:
+
+24_UNKNOWN_ITEMS_AND_SME_QUESTIONS.html
+
+The objective is to minimize questions to existing developers.
+
+However, some questions may remain unavoidable.
+
+Create a highly precise list.
+
+Do NOT ask vague questions such as:
+
+"Please explain this module."
+
+Instead ask:
+
+"Method X calls procedure Y with parameter Z. The source code does not reveal why value 'A' causes routing to flow B. Please confirm the business meaning of value A."
+
+For each question provide:
+
+Question ID
+Exact question
+Why it matters
+Evidence
+Impact if unanswered
+Possible source of answer
+
+Before adding an SME question, check whether the answer can be obtained from:
+
+* Source code
+* Configuration
+* Database metadata
+* Database data
+* Logs
+* Tests
+
+======================================================================
+5. REQUIRED TRACEABILITY
+========================
+
+Create:
+
+25_TRACEABILITY_MATRIX.html
+
+The matrix should connect:
+
+Business Flow
+->
+VXML
+->
+Java Class
+->
+Method
+->
+Database Table
+->
+SQL Query
+->
+External API
+->
+Audio Prompt
+->
+Tenant
+
+Example:
+
+| Flow | VXML | Java | Method | DB | API | Audio | Tenant |
+| ---- | ---- | ---- | ------ | -- | --- | ----- | ------ |
+
+This is one of the most important deliverables.
+
+======================================================================
+6. REQUIRED SOURCE CODE NAVIGATION
+==================================
+
+For all important findings include source references.
+
+Use repository-relative paths.
+
+Example:
+
+src/main/java/com/company/dcv/service/CardValidationService.java
+
+Method:
+
+validateDebitCard()
+
+Also mention approximate line numbers when available.
+
+If line numbers are not stable, use:
+
+Class
+Method
+Unique code reference
+
+======================================================================
+7. DOCUMENTATION FORMAT
+=======================
+
+The final deliverable should primarily be HTML documentation.
+
+Create a documentation package such as:
+
+DCV-Debitcard-Documentation/
+
+```
+index.html
+
+01_REPOSITORY_INVENTORY.html
+02_SYSTEM_ARCHITECTURE.html
+03_APPLICATION_ENTRY_POINTS.html
+04_COMPLETE_CALL_FLOW_DOCUMENTATION.html
+05_MULTI_TENANT_ARCHITECTURE.html
+06_DATABASE_ARCHITECTURE.html
+07_REQUIRED_DATABASE_QUERIES.sql
+08_DATABASE_LOGIC_TRIGGERS_PROCEDURES.html
+09_AUDIO_PROMPT_ARCHITECTURE.html
+10_EXTERNAL_API_AND_FDR_INTEGRATION.html
+11_TOKENIZATION_AND_SECURITY_ARCHITECTURE.html
+12_JAVA_CODE_ARCHITECTURE.html
+13_CONFIGURATION_AND_ENVIRONMENT.html
+14_ERROR_HANDLING_AND_RECOVERY.html
+15_SESSION_STATE_AND_VARIABLES.html
+16_END_TO_END_SEQUENCE_DIAGRAMS.html
+17_BUSINESS_RULE_CATALOG.html
+18_DATA_FLOW_DOCUMENTATION.html
+19_DEPLOYMENT_AND_OPERATIONS.html
+20_TROUBLESHOOTING_AND_SUPPORT_GUIDE.html
+21_TEST_SCENARIOS_AND_TEST_CASES.html
+22_GOOGLE_AI_MIGRATION_MAPPING.html
+23_MIGRATION_GAP_AND_RISK_ANALYSIS.html
+24_UNKNOWN_ITEMS_AND_SME_QUESTIONS.html
+25_TRACEABILITY_MATRIX.html
+
+assets/
+    diagrams/
+    images/
+    styles/
+```
+
+Also create:
+
+README.html
+
+The index page must provide easy navigation to all documents.
+
+======================================================================
+8. HTML REQUIREMENTS
+====================
+
+The HTML documentation should be professional and easy to navigate.
+
+Requirements:
+
+* Table of contents
+* Navigation sidebar
+* Search-friendly structure
+* Collapsible sections where useful
+* Clear headings
+* Code blocks
+* SQL formatting
+* Mermaid diagrams
+* Tables
+* Cross-links between documentation pages
+* Source references
+* Version/date metadata
+* Documentation status
+
+Use these status labels:
+
+CONFIRMED
+PARTIALLY CONFIRMED
+INFERRED
+NOT CONFIRMED
+REQUIRES DATABASE DATA
+REQUIRES SME VALIDATION
+
+Use visual indicators consistently.
+
+======================================================================
+9. DATABASE QUERY HANDOFF PROCESS
+=================================
+
+When database data is required:
+
+STEP 1:
+Identify all database objects used by the application.
+
+STEP 2:
+Determine which actual data is required to understand runtime behavior.
+
+STEP 3:
+Generate:
+
+07_REQUIRED_DATABASE_QUERIES.sql
+
+STEP 4:
+For every query explain its purpose.
+
+STEP 5:
+STOP and clearly indicate:
+
+DATABASE DATA REQUIRED FOR NEXT LEVEL OF ANALYSIS
+
+STEP 6:
+Wait for the user to execute the queries and provide the results.
+
+STEP 7:
+When results are provided:
+
+* Validate data
+* Update tenant matrix
+* Update call flow documentation
+* Update audio mapping
+* Update database architecture
+* Update business rules
+* Update traceability matrix
+
+Do not treat sample rows as complete production truth unless the query result proves completeness.
+
+======================================================================
+10. ANALYSIS PRIORITY
+=====================
+
+Prioritize accuracy over speed.
+
+Spend maximum effort understanding these areas:
+
+1. Actual call flow
+2. Tenant identification
+3. Tenant-specific behavior
+4. Dynamic VXML routing
+5. Database-driven configuration
+6. Audio file selection
+7. FDR integration
+8. Tokenization
+9. Oracle triggers/procedures
+10. Hidden business rules
+11. Error/retry behavior
+12. Session/state management
+
+======================================================================
+11. REQUIRED FINAL EXECUTIVE SUMMARY
+====================================
+
+Create a high-level executive summary at the beginning of index.html.
+
+It must explain:
+
+What the DCV-Debitcard application does.
+
+Who/what interacts with it.
+
+How a call travels through the application.
+
+How multi-tenancy works.
+
+How call flows differ by tenant.
+
+How database configuration affects runtime behavior.
+
+How audio prompts are selected.
+
+Which external systems are involved.
+
+What role FDR plays.
+
+What role tokenization plays.
+
+What database-side logic exists.
+
+What are the biggest migration risks.
+
+What information is still unknown.
+
+The summary should be understandable by a technical architect who has never seen this codebase.
+
+======================================================================
+12. FINAL QUALITY CONTROL
+=========================
+
+Before considering the documentation complete, perform a consistency review.
+
+Verify:
+
+1. Every major call flow has an entry point.
+2. Every entry point has a next step.
+3. Every important navigation target is documented.
+4. Every major database table used in runtime flow is documented.
+5. Every important SQL query is documented.
+6. Every trigger/procedure/function used is documented.
+7. Every external API is documented.
+8. Every tenant-specific branch is identified.
+9. Every dynamic audio selection is traced.
+10. Every major error path is documented.
+11. Every sensitive data flow is identified.
+12. Every important configuration property is documented.
+13. Every major flow appears in the traceability matrix.
+14. All undocumented assumptions are marked.
+15. No behavior is presented as fact unless evidence exists.
+
+Create a final section:
+
+DOCUMENTATION COVERAGE REPORT
+
+Include:
+
+Total source files analyzed
+Important Java classes analyzed
+VXML files analyzed
+Database tables identified
+SQL queries identified
+Triggers identified
+Procedures/functions identified
+External APIs identified
+Audio files identified
+Tenants identified
+Call flows identified
+Confirmed behaviors
+Inferred behaviors
+Unknown behaviors
+Items requiring database data
+Items requiring SME validation
+
+======================================================================
+13. FINAL OUTPUT STANDARD
+=========================
+
+The output must NOT be a generic application overview.
+
+The goal is to create an "Application Knowledge Base".
+
+A new developer should be able to answer questions such as:
+
+* How does a call enter the application?
+* How is tenant 1200 identified?
+* How is tenant 1201 different from tenant 1200?
+* Which VXML file runs first?
+* How is the next VXML determined?
+* Which database table controls this menu?
+* Where does this audio file name come from?
+* Which Java method calls FDR?
+* What happens when FDR fails?
+* What data is tokenized?
+* Which trigger updates this table?
+* Why does this tenant follow a different flow?
+* What happens after the customer presses option 2?
+* What happens after no input three times?
+* Which API is called before the final response?
+* Which configuration is required to deploy the application?
+* What are the migration risks for moving this flow to AI?
+* Which existing behavior must be preserved exactly?
+
+The documentation should provide answers without requiring the original development team.
+
+======================================================================
+14. IMPORTANT: DO NOT OVERWRITE OR MODIFY SOURCE
+================================================
+
+Do not modify application source code.
+
+Do not refactor the project.
+
+Do not change configuration.
+
+Do not execute destructive database operations.
+
+Do not expose credentials or secrets.
+
+This task is analysis and documentation only.
+
+======================================================================
+15. STARTING INSTRUCTION
+========================
+
+Start now by performing:
+
+PHASE 1 - REPOSITORY INVENTORY
+
+Then continue systematically through the analysis phases.
+
+Before generating the final documentation, create and maintain an internal evidence map connecting every major conclusion to source files or database evidence.
+
+When database data is required, generate the SQL query file and clearly identify exactly what output is needed.
+
+Accuracy is more important than speed.
+
+Completeness is more important than brevity.
+
+Do not simplify complex logic.
+
+Trace the actual behavior.
+
+The final result should be a professional, production-grade, full-scale technical and functional documentation package for DCV-Debitcard.
+
+This prompt is intentionally strict because the biggest danger with a large legacy IVR application is that the model may create **beautiful documentation that is not actually connected to the real runtime behavior**.
+
+The most important parts I added beyond your original requirements are:
+
+* **Evidence-based documentation** for every important finding
+* **No hallucination / NOT CONFIRMED rules**
+* **Full call-flow tracing**, not just code summaries
+* **Tenant comparison matrix**
+* **Shared vs tenant-specific architecture**
+* **Exact database SQL handoff process**
+* **Oracle triggers, procedures, functions, and packages**
+* **Audio-to-flow-to-DB mapping**
+* **Session and state variable documentation**
+* **No-input / no-match / retry / timeout analysis**
+* **Sensitive data and tokenization flow**
+* **End-to-end sequence diagrams**
+* **Business rule catalog**
+* **Traceability matrix**
+* **Troubleshooting guide**
+* **Test case extraction**
+* **Migration gap and risk analysis**
+* **Precise SME question register**
+* **Documentation coverage report**
+
+One recommendation: **do not give the whole task to Devin and expect one final run to be perfect**. The best workflow is:
+
+1. Feed the full application.
+2. Use this prompt.
+3. Let it complete repository and source analysis.
+4. Collect the generated `07_REQUIRED_DATABASE_QUERIES.sql`.
+5. Run those queries against Oracle.
+6. Feed the results back.
+7. Ask Devin to update and finalize the documentation based on the actual DB data.
+
+That two-stage approach will significantly improve accuracy, especially for your **multi-tenant call flows, DB-driven audio names, configuration tables, and dynamic routing**.
