@@ -1,5 +1,54 @@
-Thank you for your email. I am currently out of the office on emergency leave today and tomorrow due to a family medical emergency, with limited access to my emails.
-I will get back to you as soon as I return. If your matter is urgent, please reach out to Sudhakar chaurasia or Anthony Hoy
- 
-Hi Anthony, sorry for the short notice, but my uncle was in a bike accident and injured his left hand and wrist. I need to be at the hospital with him, so I will be on leave today and most likely tomorrow. I'll keep you posted.
+00:00] Lori: Hello?
+[00:02] Anthony: Hello.
+[00:03] Lori: Yes, sorry. I dropped off for a bit 'cause I wasn't sure, so...
+[00:07] Anthony: Yeah, I know. I just can't...
+[00:11] Lori: I know, there's not... I know, there's not enough air. I figured as long as you and I connected and you were clear, you know, on what I was asking about, then you could relay it to Anoop.
+[00:22] Anthony: Yeah, he's—he was out today, but yeah, I just need to understand what's happening, and like you said, this is some new requirement, so we haven't done this before, so that's going to be the challenge. Um...
+[00:37] Lori: Yeah, so, so as far as RBC is concerned, so RBC is discussing transitioning from a credit platform to a debit platform on our systems in Q1 of next year. And they are not looking to, unfortunately, instead of doing an all-at-once conversion, they're looking at doing small groups at a time. So, you know, the majority of their client—or customers—will still be on the credit platform as they slowly transition the customers over to a debit platform.
+[01:20] Anthony: So, first question: do the individuals know their status as they go through this process?
+[01:26] Lori: What do you mean?
+[01:29] Anthony: Do they know if they're on the credit or debit?
+[01:32] Lori: Well, no, I mean, they're not going to know, but what they're going to get is a new card, which will be the debit card with the new BIN number. So the card will say to call in and activate the card.
+[01:44] Anthony: 'Cause the challenge is going to be identifying this individual and sending them in the right direction without them knowing...
+[01:57] Lori: ...BIN number. So their BIN number will be completely different than what the BIN number currently is for RBC.
+[02:03] Anthony: So they're going to come in via the same method they do today.
+[02:09] Lori: Yeah, same phone number.
+[02:09] Anthony: They're going to enter their credentials.
+[02:11] Lori: Mhm.
+[02:12] Anthony: And then once that information is returned to us, we're either going to see the new BIN or the old BIN, and then what do we do differently with them based on that?
+[02:25] Lori: Correct. So I think...
+[02:26] Anthony: 'Cause that's—that's the challenge, right? 'Cause if the messaging has to change and everything... ugh.
+[02:33] Lori: I don't think the messaging is going to change. I think the concern—at least I know when Sherry and I had talked about it when she was still here—the concern was the whole upgrade/downgrade, and because the balance pulls from a different area in the debit platform than it does the credit platform, is that... can that be done, um, when the customer is choosing to activate their card? Because once they call in—and we have other IVR lines that have multiple BINs on them, and certain things are queued due to what card number they, you know, punch in—um, so if they punch in that new BIN number, that new card number, and they activate it, and then they, you know, will—will then the IVR line pull in their correct balance from the correct place? I—I think we just want to make sure, because this has never happened, that nothing gets in the way. It—it should still be the same, um, call flow. It would just be a different...
+[03:47] Anthony: Balance.
+[03:48] Lori: ...you know, balance.
+[03:49] Anthony: That's the only delta?
+[03:53] Lori: What do you mean?
+[03:54] Anthony: That's the only thing that's different between the credit and the debit? The...
+[03:59] Lori: I—I believe so, but I'm not positive about that because I truly don't know what your IVR pulls and where it pulls it from. So, I—I believe that's the only thing. As far as...
+[04:12] Anthony: Everything... uh, uh, this all comes from...
+[04:16] Lori: FDR.
+[04:16] Anthony: ...uh, FDR, yeah.
+[04:18] Lori: Yeah. So that's what I'm saying, like as far as I know, the only difference is where the balance pulls from. That should be the only difference.
+[04:28] Anthony: So, so we should be able to... uh... So I was thinking, if it's... So what would we have to do if you enter the card number and it returns the associated BIN? There's nothing we need to do then. Because whatever BIN is returned, when you make the subsequent calls to FDR, it will be with that BIN number, and then return that information accordingly, right?
+[05:06] Lori: Okay, so I—I guess, I mean, so your system can handle both...
+[05:10] Anthony: Well, we—we can...
+[05:11] Lori: ...you know, both designations of that? I—I again, I mean, I know you take it from the FDR system, but I—I guess I, you know, I don't know what your—what the actual IVR system can or cannot handle. Um, you know, if... Go ahead.
+[05:34] Anthony: So here's what we'll do. Um, Anoop should be in tomorrow. He can confirm if there's any manipulation of that BIN that we are returned once the account is validated. If there is none, then when we make the call, it should return the appropriate information. And we can test this, right? Do you have it set up in the test environment, any data?
+[06:01] Lori: No, no, we haven't gotten that far. This was—when I originally put in the ticket back in mid-September, it was kind of an exploratory ticket to make sure, hey, this isn't a deal-stopper before they continued on with the conversion talk. Now, obviously, at this point we're kind of past that. But, um, I just want to make sure there's no red flags to begin with. Uh, we haven't even gotten far enough for me to test anything.
+[06:29] Anthony: Uh, yeah, not a hundred percent sure. So, we'll talk to, uh, Anoop tomorrow about that and see if there, like I said, if there's any manipulation on the BIN number. But normally, if you pass—what—whatever information comes to us upon validation is what we use for subsequent calls. Unless there's something in there that... We're not storing the BIN in the variable table or anywhere. So it should be whatever BIN we get is what we supply for the subsequent calls, but I'll confirm that.
+[07:10] Lori: Okay. Yeah. Uh, if you want to confirm that, and then he—uh, sorry—uh, both of you or one of you, if you can make sure, and I'm going to pronounce his name wrong: Ma- Matsu?
+[07:28] Anthony: Uh-huh.
+[07:29] Lori: Is that correct?
+[07:30] Anthony: Yeah.
+[07:31] Lori: Um, I think he was the one looking for additional information, and when I talked to him originally—him and Anoop on a previous call—you know, I told him, I was like, "As far as my side, I've kind of provided all that in the ticket. I'm not sure what else he needs technically."
+[07:47] Anthony: Yeah, he doesn't—he doesn't—he doesn't understand IVRs at all, so that's the issue.
+[07:54] Lori: Yeah. So, um, if somebody wants to loop him in on your side to get him, uh, you know, pacified on what he needs, so...
+[08:04] Anthony: Okay. Let me, um, like I said, let—let me get with Anoop tomorrow and then I'll know what to give him.
+[08:10] Lori: Okay. Okay, and if you have any additional questions or anything, just reach out, let me know, okay?
+[08:17] Anthony: Okay. Thank you.
+[08:19] Lori: Thanks, Anthony. I really appreciate it.
+[08:21] Anthony: You're welcome.
+[08:22] Lori: All right, have a good one.
+[08:23] Anthony: You too.
+[08:24] Lori: All right, bye.
  
